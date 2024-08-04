@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:charts_flutter/flutter.dart' as charts;
+import 'package:fl_chart/fl_chart.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
 class chartScreen extends StatefulWidget {
   @override
-  _MyPageState createState() => _MyPageState();
+  _ChartScreenState createState() => _ChartScreenState();
 }
 
-class _MyPageState extends State<chartScreen> {
+class _ChartScreenState extends State<chartScreen> {
   final DatabaseReference _heartRateRef = FirebaseDatabase.instance.ref().child('heart_rate');
   String _currentHeartRate = 'Loading...';
-  List<charts.Series<HeartRateData, DateTime>> _dailyChartSeries = [];
-  List<charts.Series<HeartRateData, DateTime>> _weeklyChartSeries = [];
+  List<HeartRateData> _dailyData = [];
+  List<HeartRateData> _weeklyData = [];
 
   @override
   void initState() {
@@ -57,29 +57,23 @@ class _MyPageState extends State<chartScreen> {
     ];
 
     setState(() {
-      _dailyChartSeries = [
-        charts.Series<HeartRateData, DateTime>(
-          id: 'Daily Heart Rate',
-          colorFn: (_, __) => charts.MaterialPalette.blue.shadeDefault,
-          domainFn: (HeartRateData data, _) => data.time,
-          measureFn: (HeartRateData data, _) => data.heartRate,
-          data: dailyData,
-        ),
-      ];
-      _weeklyChartSeries = [
-        charts.Series<HeartRateData, DateTime>(
-          id: 'Weekly Heart Rate',
-          colorFn: (_, __) => charts.MaterialPalette.red.shadeDefault,
-          domainFn: (HeartRateData data, _) => data.time,
-          measureFn: (HeartRateData data, _) => data.heartRate,
-          data: weeklyData,
-        ),
-      ];
+      _dailyData = dailyData;
+      _weeklyData = weeklyData;
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    List<FlSpot> dailySpots = _dailyData.map((data) => FlSpot(
+      data.time.millisecondsSinceEpoch.toDouble(),
+      data.heartRate.toDouble(),
+    )).toList();
+
+    List<FlSpot> weeklySpots = _weeklyData.map((data) => FlSpot(
+      data.time.millisecondsSinceEpoch.toDouble(),
+      data.heartRate.toDouble(),
+    )).toList();
+
     return Scaffold(
       appBar: AppBar(
         title: Text('My Page'),
@@ -102,18 +96,16 @@ class _MyPageState extends State<chartScreen> {
             Text('Daily Heart Rate Statistics:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             SizedBox(
               height: 200,
-              child: charts.TimeSeriesChart(
-                _dailyChartSeries,
-                animate: true,
+              child: LineChart(
+                mainData(dailySpots),
               ),
             ),
             SizedBox(height: 20),
             Text('Weekly Heart Rate Statistics:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             SizedBox(
               height: 200,
-              child: charts.TimeSeriesChart(
-                _weeklyChartSeries,
-                animate: true,
+              child: LineChart(
+                mainData(weeklySpots),
               ),
             ),
             Spacer(),
@@ -146,6 +138,137 @@ class _MyPageState extends State<chartScreen> {
       ),
     );
   }
+
+  LineChartData mainData(List<FlSpot> spots) {
+    return LineChartData(
+      lineTouchData: LineTouchData(
+        getTouchedSpotIndicator: (LineChartBarData barData, List<int> spotIndexes) {
+          return spotIndexes.map((spotIndex) {
+            final spot = barData.spots[spotIndex];
+            return TouchedSpotIndicatorData(
+              FlLine(
+                color: Colors.white24,
+                strokeWidth: 4,
+              ),
+              FlDotData(show: true),
+            );
+          }).toList();
+        },
+        touchTooltipData: LineTouchTooltipData(
+          getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
+            return touchedBarSpots.map((barSpot) {
+              final flSpot = barSpot;
+              return LineTooltipItem(
+                '${DateTime.fromMillisecondsSinceEpoch(flSpot.x.toInt()).day}/${DateTime.fromMillisecondsSinceEpoch(flSpot.x.toInt()).month}\n',
+                TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+                children: [
+                  TextSpan(
+                    text: '${flSpot.y.toInt()} bpm',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ],
+                textAlign: TextAlign.center,
+              );
+            }).toList();
+          },
+        ),
+      ),
+      extraLinesData: ExtraLinesData(
+        horizontalLines: [
+          HorizontalLine(
+            y: 80, // 목표 수치
+            color: Color(0xFFEAECFF),
+            strokeWidth: 2,
+            dashArray: [20, 10],
+          ),
+        ],
+      ),
+      gridData: FlGridData(
+        show: true,
+        drawVerticalLine: true,
+        horizontalInterval: 10,
+        verticalInterval: 10,
+        getDrawingHorizontalLine: (value) {
+          return FlLine(
+            color: Colors.white10,
+            strokeWidth: 1,
+          );
+        },
+        getDrawingVerticalLine: (value) {
+          return FlLine(
+            color: Colors.white10,
+            strokeWidth: 1,
+          );
+        },
+      ),
+      titlesData: FlTitlesData(
+        rightTitles: AxisTitles(
+          sideTitles: SideTitles(showTitles: false),
+        ),
+        topTitles: AxisTitles(
+          sideTitles: SideTitles(showTitles: false),
+        ),
+        bottomTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: true,
+            reservedSize: 30,
+            interval: 1,
+            getTitlesWidget: (value, meta) {
+              final date = DateTime.fromMillisecondsSinceEpoch(value.toInt());
+              return SideTitleWidget(
+                axisSide: meta.axisSide,
+                child: Text('${date.day}/${date.month}'),
+              );
+            },
+          ),
+        ),
+        leftTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: true,
+            reservedSize: 36,
+            interval: 10,
+            getTitlesWidget: (value, meta) => Text(
+              '$value bpm',
+              style: TextStyle(fontSize: 14),
+            ),
+          ),
+        ),
+      ),
+      borderData: FlBorderData(
+        show: true,
+        border: Border.all(color: Colors.white10),
+      ),
+      minX: spots.isEmpty ? 0 : spots.first.x,
+      maxX: spots.isEmpty ? 1 : spots.last.x,
+      minY: spots.isEmpty ? 0 : spots.reduce((a, b) => a.y < b.y ? a : b).y - 10,
+      maxY: spots.isEmpty ? 100 : spots.reduce((a, b) => a.y > b.y ? a : b).y + 10,
+      lineBarsData: [
+        LineChartBarData(
+          spots: spots,
+          isCurved: true,
+          color: Colors.blue,
+          gradient: LinearGradient(
+            colors: [Colors.blue.withOpacity(0.6), Colors.blue.withOpacity(0.3)],
+          ),
+          barWidth: 5,
+          isStrokeCapRound: true,
+          dotData: FlDotData(show: true),
+          belowBarData: BarAreaData(
+            show: true,
+            gradient: LinearGradient(
+              colors: [Colors.blue.withOpacity(0.3), Colors.blue.withOpacity(0.1)],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class HeartRateData {
@@ -154,3 +277,4 @@ class HeartRateData {
 
   HeartRateData(this.time, this.heartRate);
 }
+

@@ -25,12 +25,12 @@ if (flutterVersionName == null) {
 
 android {
     namespace = "com.example.cj_webapp"
-    compileSdkVersion 33  // 직접 명시한 버전
+    compileSdkVersion 34  // 직접 명시한 버전
     ndkVersion '23.1.7779620'  // 예시로 설정한 NDK 버전, 필요 시 업데이트
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 
     defaultConfig {
@@ -46,9 +46,20 @@ android {
             signingConfig = signingConfigs.debug
         }
     }
+
+    kotlinOptions {
+        jvmTarget = "17"
+    }
 }
 
 flutter {
     source = "../.."
 }
+
+dependencies {
+    implementation 'androidx.annotation:annotation:1.8.1'
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'com.google.android.material:material:1.12.0'
+}
+
 

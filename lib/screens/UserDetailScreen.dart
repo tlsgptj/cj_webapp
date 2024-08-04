@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:charts_flutter/flutter.dart' as charts;
+import 'package:fl_chart/fl_chart.dart';
+
+import 'AdminScreen.dart';
+import 'HeartRateData.dart';
 
 class UserDetailScreen extends StatefulWidget {
   final String userId;
@@ -14,7 +17,6 @@ class UserDetailScreen extends StatefulWidget {
 class _UserDetailsScreenState extends State<UserDetailScreen> {
   final DatabaseReference _databaseRef = FirebaseDatabase.instance.ref();
   List<HeartRateData> _heartRateData = [];
-  List<charts.Series<HeartRateData, DateTime>>? _chartSeries;
   double _threshold = 0.0;
   List<String> _reports = [];
   bool _isLoading = true;
@@ -42,15 +44,6 @@ class _UserDetailsScreenState extends State<UserDetailScreen> {
 
       setState(() {
         _heartRateData = heartRateList;
-        _chartSeries = [
-          charts.Series<HeartRateData, DateTime>(
-            id: 'HeartRate',
-            colorFn: (_, __) => charts.MaterialPalette.blue.shadeDefault,
-            domainFn: (HeartRateData data, _) => data.timestamp,
-            measureFn: (HeartRateData data, _) => data.heartRate,
-            data: heartRateList,
-          ),
-        ];
       });
     }
 
@@ -85,11 +78,140 @@ class _UserDetailsScreenState extends State<UserDetailScreen> {
     });
   }
 
+  LineChartData _lineChartData() {
+    List<FlSpot> spots = _heartRateData.map((data) {
+      return FlSpot(
+        data.timestamp.millisecondsSinceEpoch.toDouble(),
+        data.heartRate,
+      );
+    }).toList();
+
+    return LineChartData(
+      lineTouchData: LineTouchData(
+        touchTooltipData: LineTouchTooltipData(
+          getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
+            return touchedBarSpots.map((barSpot) {
+              final flSpot = barSpot;
+              return LineTooltipItem(
+                '${DateTime.fromMillisecondsSinceEpoch(flSpot.x.toInt()).toLocal().toString().split(' ')[0]}\n',
+                TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+                children: [
+                  TextSpan(
+                    text: '${flSpot.y.toStringAsFixed(1)} bpm',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ],
+                textAlign: TextAlign.center,
+              );
+            }).toList();
+          },
+        ),
+      ),
+      extraLinesData: ExtraLinesData(
+        horizontalLines: [
+          HorizontalLine(
+            y: _threshold,
+            color: Color(0xFFEAECFF),
+            strokeWidth: 2,
+            dashArray: [20, 10],
+          ),
+        ],
+      ),
+      gridData: FlGridData(
+        show: true,
+        drawVerticalLine: true,
+        horizontalInterval: 10,
+        verticalInterval: 10,
+        getDrawingHorizontalLine: (value) {
+          return FlLine(
+            color: Colors.white10,
+            strokeWidth: 1,
+          );
+        },
+        getDrawingVerticalLine: (value) {
+          return FlLine(
+            color: Colors.white10,
+            strokeWidth: 1,
+          );
+        },
+      ),
+      titlesData: FlTitlesData(
+        bottomTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: true,
+            reservedSize: 40,
+            interval: 1,
+            getTitlesWidget: (value, meta) {
+              final date = DateTime.fromMillisecondsSinceEpoch(value.toInt());
+              return SideTitleWidget(
+                axisSide: meta.axisSide,
+                child: Text('${date.day}/${date.month}'),
+              );
+            },
+          ),
+        ),
+        leftTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: true,
+            reservedSize: 40,
+            getTitlesWidget: (value, meta) => Text('$value bpm'),
+          ),
+        ),
+        rightTitles: AxisTitles(
+          sideTitles: SideTitles(showTitles: false),
+        ),
+        topTitles: AxisTitles(
+          sideTitles: SideTitles(showTitles: false),
+        ),
+      ),
+      borderData: FlBorderData(
+        show: true,
+        border: Border.all(color: Colors.white10),
+      ),
+      minX: _heartRateData.isNotEmpty ? _heartRateData.first.timestamp.millisecondsSinceEpoch.toDouble() : 0,
+      maxX: _heartRateData.isNotEmpty ? _heartRateData.last.timestamp.millisecondsSinceEpoch.toDouble() : 0,
+      minY: 0,
+      maxY: (_heartRateData.isNotEmpty ? _heartRateData.map((data) => data.heartRate).reduce((a, b) => a > b ? a : b) : 100) + 10,
+      lineBarsData: [
+        LineChartBarData(
+          spots: spots,
+          isCurved: true,
+          color: Colors.blue,
+          gradient: LinearGradient(
+            colors: [Colors.blue, Colors.blueAccent],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          barWidth: 4,
+          isStrokeCapRound: true,
+          dotData: FlDotData(
+            show: false,
+          ),
+          belowBarData: BarAreaData(
+            show: true,
+            gradient: LinearGradient(
+              colors: [Colors.blue.withOpacity(0.3), Colors.blueAccent.withOpacity(0.1)],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('User Details'),
+        backgroundColor: Colors.blueAccent,
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
@@ -124,13 +246,9 @@ class _UserDetailsScreenState extends State<UserDetailScreen> {
             Text('Heart Rate Chart', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             SizedBox(
               height: 300,
-              child: _chartSeries == null
+              child: _heartRateData.isEmpty
                   ? Center(child: CircularProgressIndicator())
-                  : charts.TimeSeriesChart(
-                _chartSeries!,
-                animate: true,
-                dateTimeFactory: const charts.LocalDateTimeFactory(),
-              ),
+                  : LineChart(_lineChartData()),
             ),
             SizedBox(height: 20),
             Text('Report History', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
@@ -148,10 +266,7 @@ class _UserDetailsScreenState extends State<UserDetailScreen> {
   }
 }
 
-class HeartRateData {
-  final DateTime timestamp;
-  final double heartRate;
 
-  HeartRateData(this.timestamp, this.heartRate);
-}
+
+
 

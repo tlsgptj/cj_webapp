@@ -34,7 +34,6 @@ dependencies:
   firebase_auth: ^4.20.0
   firebase_storage: ^11.7.7
   fluttertoast: ^8.2.1
-  biometric_storage: ^5.0.1
   fl_chart: ^0.68.0
   local_auth: ^2.2.0
   firebase_database: ^10.5.7
@@ -42,6 +41,8 @@ dependencies:
   connectivity_plus: ^6.0.4
   cached_network_image: ^3.2.0
   image_picker: ^1.1.2
+  flutter_svg: ^2.0.9
+  biometric_fingerprint:
 
 
   # The following adds the Cupertino Icons font to your application.

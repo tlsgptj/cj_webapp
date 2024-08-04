@@ -26,7 +26,6 @@ class _LoginScreenState extends State<loginScreen> {
 
       final isAuthenticated = await auth.authenticate(
         localizedReason: 'Please authenticate to log in',
-        // No biometricOnly parameter needed
       );
 
       if (isAuthenticated) {

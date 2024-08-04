@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:charts_flutter/flutter.dart' as charts;
+import 'package:fl_chart/fl_chart.dart'; // Import the fl_chart package
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:async';
+
+import 'AdminScreen.dart';
+import 'HeartRateData.dart';
 
 class homeScreen extends StatefulWidget {
   @override
@@ -14,17 +17,17 @@ class _HomeScreenState extends State<homeScreen> {
   final DatabaseReference _databaseRef = FirebaseDatabase.instance.ref('heart_rate_data');
   final Connectivity _connectivity = Connectivity();
   StreamSubscription<ConnectivityResult>? _connectivitySubscription;
+  StreamSubscription<DatabaseEvent>? _databaseSubscription;
   bool _isConnected = false;
-  List<charts.Series<HeartRateData, DateTime>>? _seriesLineData;
+  List<HeartRateData> _heartRateData = [];
   DateTime? _startWorkTime;
   Timer? _updateTimer;
-  List<HeartRateData> _heartRateData = [];
 
   @override
   void initState() {
     super.initState();
     _checkConnection();
-    _fetchHeartRateData();
+    _fetchInitialHeartRateData();
     _updateTimer = Timer.periodic(Duration(hours: 3), (Timer t) => _fetchHeartRateData());
     _startWorkTime = DateTime.now(); // Example start time
   }
@@ -42,6 +45,23 @@ class _HomeScreenState extends State<homeScreen> {
     });
   }
 
+  Future<void> _fetchInitialHeartRateData() async {
+    _databaseSubscription = _databaseRef.onValue.listen((DatabaseEvent event) {
+      final data = event.snapshot.value as Map?;
+      if (data != null) {
+        final List<HeartRateData> heartRateList = data.entries.map((e) {
+          final timestamp = DateTime.parse(e.key);
+          final heartRate = (e.value as Map)['value'] as double;
+          return HeartRateData(timestamp, heartRate);
+        }).toList();
+
+        setState(() {
+          _heartRateData = heartRateList;
+        });
+      }
+    });
+  }
+
   Future<void> _fetchHeartRateData() async {
     final snapshot = await _databaseRef.get();
     if (snapshot.exists) {
@@ -55,15 +75,6 @@ class _HomeScreenState extends State<homeScreen> {
 
         setState(() {
           _heartRateData = heartRateList;
-          _seriesLineData = [
-            charts.Series<HeartRateData, DateTime>(
-              id: 'HeartRate',
-              colorFn: (_, __) => charts.MaterialPalette.blue.shadeDefault,
-              domainFn: (HeartRateData data, _) => data.timestamp,
-              measureFn: (HeartRateData data, _) => data.heartRate,
-              data: heartRateList,
-            ),
-          ];
         });
       }
     }
@@ -72,6 +83,7 @@ class _HomeScreenState extends State<homeScreen> {
   @override
   void dispose() {
     _connectivitySubscription?.cancel();
+    _databaseSubscription?.cancel();
     _updateTimer?.cancel();
     super.dispose();
   }
@@ -87,7 +99,6 @@ class _HomeScreenState extends State<homeScreen> {
       body: _isConnected ? _buildContent(workDuration) : _buildNoConnection(),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Handle report action
           Navigator.pushNamed(context, '/report'); // Navigate to a Report Screen
         },
         child: Icon(Icons.report),
@@ -103,6 +114,12 @@ class _HomeScreenState extends State<homeScreen> {
   }
 
   Widget _buildContent(Duration workDuration) {
+    // Convert data to FlSpot
+    List<FlSpot> spots = _heartRateData.map((data) => FlSpot(
+      data.timestamp.millisecondsSinceEpoch.toDouble(),
+      data.heartRate,
+    )).toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -120,14 +137,155 @@ class _HomeScreenState extends State<homeScreen> {
         ),
         Padding(
           padding: const EdgeInsets.all(16.0),
-          child: _seriesLineData == null
+          child: _heartRateData.isEmpty
               ? CircularProgressIndicator()
               : SizedBox(
             height: 300,
-            child: charts.TimeSeriesChart(
-              _seriesLineData!,
-              animate: true,
-              dateTimeFactory: const charts.LocalDateTimeFactory(),
+            child: LineChart(
+              LineChartData(
+                lineTouchData: LineTouchData(
+                  getTouchedSpotIndicator: (LineChartBarData barData, List<int> spotIndexes) {
+                    return spotIndexes.map((spotIndex) {
+                      final spot = barData.spots[spotIndex];
+                      if (spot.x == 0 || spot.x == 6) {
+                        return null;
+                      }
+                      return TouchedSpotIndicatorData(
+                        FlLine(
+                          color: Colors.white24,
+                          strokeWidth: 4,
+                        ),
+                        FlDotData(show: true), // Provide the second argument here
+                      );
+                    }).toList();
+                  },
+                  touchTooltipData: LineTouchTooltipData(
+                    getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
+                      return touchedBarSpots.map((barSpot) {
+                        final flSpot = barSpot;
+                        if (flSpot.x == 0 || flSpot.x == 6) {
+                          return null;
+                        }
+                        return LineTooltipItem(
+                          '${flSpot.x.toInt()}일 수면시간\n',
+                          TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          children: [
+                            TextSpan(
+                              text: '${flSpot.y.toInt()}',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            const TextSpan(
+                              text: ' 시간 ',
+                              style: TextStyle(
+                                fontStyle: FontStyle.italic,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ],
+                          textAlign: TextAlign.center,
+                        );
+                      }).toList();
+                    },
+                  ),
+                ),
+                extraLinesData: ExtraLinesData(
+                  horizontalLines: [
+                    HorizontalLine(
+                      y: 6.5,
+                      color: Color(0xFFEAECFF),
+                      strokeWidth: 2,
+                      dashArray: [20, 10],
+                    ),
+                  ],
+                ),
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: true,
+                  horizontalInterval: 1,
+                  verticalInterval: 1,
+                  getDrawingHorizontalLine: (value) {
+                    return FlLine(
+                      color: Colors.white10,
+                      strokeWidth: 1,
+                    );
+                  },
+                  getDrawingVerticalLine: (value) {
+                    return FlLine(
+                      color: Colors.white10,
+                      strokeWidth: 1,
+                    );
+                  },
+                ),
+                titlesData: FlTitlesData(
+                  rightTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  topTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 30,
+                      interval: 1,
+                      getTitlesWidget: (value, meta) {
+                        final date = DateTime.fromMillisecondsSinceEpoch(value.toInt());
+                        return SideTitleWidget(
+                          axisSide: meta.axisSide,
+                          child: Text(
+                            '${date.day}/${date.month}',
+                            style: TextStyle(fontSize: 14),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 36,
+                      interval: 1,
+                      getTitlesWidget: (value, meta) => Text(
+                        '$value',
+                        style: TextStyle(fontSize: 14),
+                      ),
+                    ),
+                  ),
+                ),
+                borderData: FlBorderData(
+                  show: true,
+                  border: Border.all(color: Colors.white10),
+                ),
+                minX: 0,
+                maxX: 6,
+                minY: 0,
+                maxY: 10,
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: spots.isEmpty ? [FlSpot(0, 0)] : spots,
+                    isCurved: true,
+                    color: Colors.blue,
+                    gradient: LinearGradient(
+                      colors: [Colors.blue.withOpacity(0.6), Colors.blue.withOpacity(0.3)],
+                    ),
+                    barWidth: 5,
+                    isStrokeCapRound: true,
+                    dotData: FlDotData(show: false),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      gradient: LinearGradient(
+                        colors: [Colors.blue.withOpacity(0.3), Colors.blue.withOpacity(0.1)],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -135,7 +293,6 @@ class _HomeScreenState extends State<homeScreen> {
           padding: const EdgeInsets.all(16.0),
           child: ElevatedButton(
             onPressed: () {
-              // Handle help action
               Navigator.pushNamed(context, '/help'); // Navigate to a Help Screen
             },
             child: Text('Help'),
@@ -153,9 +310,4 @@ class _HomeScreenState extends State<homeScreen> {
   }
 }
 
-class HeartRateData {
-  final DateTime timestamp;
-  final double heartRate;
 
-  HeartRateData(this.timestamp, this.heartRate);
-}
