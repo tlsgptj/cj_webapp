@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="firebase_database_url" translatable="false">https://cj-project-da850-default-rtdb.firebaseio.com</string>
+    <string name="gcm_defaultSenderId" translatable="false">574274568290</string>
+    <string name="google_api_key" translatable="false">AIzaSyBmfNp_858FF5GmmMhHFsY50SW5v6v_4Uk</string>
+    <string name="google_app_id" translatable="false">1:574274568290:android:72a7faa9ddef54d842d13b</string>
+    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyBmfNp_858FF5GmmMhHFsY50SW5v6v_4Uk</string>
+    <string name="google_storage_bucket" translatable="false">cj-project-da850.appspot.com</string>
+    <string name="project_id" translatable="false">cj-project-da850</string>
+</resources>
