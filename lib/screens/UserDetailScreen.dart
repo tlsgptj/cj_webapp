@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:fl_chart/fl_chart.dart';
 
-import 'AdminScreen.dart';
 import 'HeartRateData.dart';
 
 class UserDetailScreen extends StatefulWidget {
-  final String userId;
+  final String? userId;
 
   UserDetailScreen({required this.userId});
 

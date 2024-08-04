@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:fl_chart/fl_chart.dart'; // Import the fl_chart package
@@ -5,7 +6,6 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:async';
 
-import 'AdminScreen.dart';
 import 'HeartRateData.dart';
 
 class homeScreen extends StatefulWidget {
@@ -33,58 +33,84 @@ class _HomeScreenState extends State<homeScreen> {
   }
 
   Future<void> _checkConnection() async {
-    _connectivitySubscription = _connectivity.onConnectivityChanged.listen((ConnectivityResult result) {
-      setState(() {
-        _isConnected = (result == ConnectivityResult.wifi || result == ConnectivityResult.mobile);
-      });
-    } as void Function(List<ConnectivityResult> event)?) as StreamSubscription<ConnectivityResult>?;
+    try {
+      _connectivitySubscription = _connectivity.onConnectivityChanged.listen((ConnectivityResult result) {
+        setState(() {
+          _isConnected = (result == ConnectivityResult.wifi || result == ConnectivityResult.mobile);
+        });
+      } as void Function(List<ConnectivityResult> event)?) as StreamSubscription<ConnectivityResult>?;
 
-    var connectivityResult = await _connectivity.checkConnectivity();
-    setState(() {
-      _isConnected = (connectivityResult == ConnectivityResult.wifi || connectivityResult == ConnectivityResult.mobile);
-    });
+      var connectivityResult = await _connectivity.checkConnectivity();
+      setState(() {
+        _isConnected = (connectivityResult == ConnectivityResult.wifi || connectivityResult == ConnectivityResult.mobile);
+      });
+    } catch (e) {
+      print('연결 상태 확인 중 오류 발생: $e');
+      // 필요에 따라 사용자에게 오류 메시지를 표시할 수 있음
+    }
   }
 
   Future<void> _fetchInitialHeartRateData() async {
-    _databaseSubscription = _databaseRef.onValue.listen((DatabaseEvent event) {
-      final data = event.snapshot.value as Map?;
-      if (data != null) {
-        final List<HeartRateData> heartRateList = data.entries.map((e) {
-          final timestamp = DateTime.parse(e.key);
-          final heartRate = (e.value as Map)['value'] as double;
-          return HeartRateData(timestamp, heartRate);
-        }).toList();
+    try {
+      _databaseSubscription = _databaseRef.onValue.listen((DatabaseEvent event) {
+        final data = event.snapshot.value as Map?;
+        if (data != null) {
+          final List<HeartRateData> heartRateList = data.entries.map((e) {
+            final timestamp = DateTime.parse(e.key);
+            final heartRate = (e.value as Map)['value'] as double;
+            return HeartRateData(timestamp, heartRate);
+          }).toList();
 
-        setState(() {
-          _heartRateData = heartRateList;
-        });
-      }
-    });
+          setState(() {
+            _heartRateData = heartRateList;
+          });
+        }
+      });
+    } on FirebaseException catch (e) {
+      print('FirebaseException 발생: ${e.message}');
+      // 필요에 따라 사용자에게 오류 메시지를 표시할 수 있음
+    } catch (e) {
+      print('일반 예외 발생: $e');
+      // 필요에 따라 사용자에게 오류 메시지를 표시할 수 있음
+    }
   }
 
   Future<void> _fetchHeartRateData() async {
-    final snapshot = await _databaseRef.get();
-    if (snapshot.exists) {
-      final data = snapshot.value as Map?;
-      if (data != null) {
-        final List<HeartRateData> heartRateList = data.entries.map((e) {
-          final timestamp = DateTime.parse(e.key);
-          final heartRate = (e.value as Map)['value'] as double;
-          return HeartRateData(timestamp, heartRate);
-        }).toList();
+    try {
+      final snapshot = await _databaseRef.get();
+      if (snapshot.exists) {
+        final data = snapshot.value as Map?;
+        if (data != null) {
+          final List<HeartRateData> heartRateList = data.entries.map((e) {
+            final timestamp = DateTime.parse(e.key);
+            final heartRate = (e.value as Map)['value'] as double;
+            return HeartRateData(timestamp, heartRate);
+          }).toList();
 
-        setState(() {
-          _heartRateData = heartRateList;
-        });
+          setState(() {
+            _heartRateData = heartRateList;
+          });
+        }
       }
+    } on FirebaseException catch (e) {
+      print('FirebaseException 발생: ${e.message}');
+      // 필요에 따라 사용자에게 오류 메시지를 표시할 수 있음
+    } catch (e) {
+      print('일반 예외 발생: $e');
+      // 필요에 따라 사용자에게 오류 메시지를 표시할 수 있음
     }
   }
 
   @override
   void dispose() {
-    _connectivitySubscription?.cancel();
-    _databaseSubscription?.cancel();
-    _updateTimer?.cancel();
+    try {
+      _connectivitySubscription?.cancel();
+      _databaseSubscription?.cancel();
+      _updateTimer?.cancel();
+    } catch (e) {
+      print('리소스 해제 중 오류 발생: $e');
+      // 필요에 따라 사용자에게 오류 메시지를 표시할 수 있음
+    }
     super.dispose();
   }
 
@@ -309,5 +335,6 @@ class _HomeScreenState extends State<homeScreen> {
     );
   }
 }
+
 
 
