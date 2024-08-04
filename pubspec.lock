@@ -25,14 +25,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.11.0"
-  biometric_fingerprint:
-    dependency: "direct main"
-    description:
-      name: biometric_fingerprint
-      sha256: "50a2065588841033334cfbf3eeb011763138b176875594290d6fd9189ad60544"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.0.7"
   boolean_selector:
     dependency: transitive
     description:

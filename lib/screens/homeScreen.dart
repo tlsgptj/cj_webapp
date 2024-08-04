@@ -16,7 +16,6 @@ class homeScreen extends StatefulWidget {
 class _HomeScreenState extends State<homeScreen> {
   final DatabaseReference _databaseRef = FirebaseDatabase.instance.ref('heart_rate_data');
   final Connectivity _connectivity = Connectivity();
-  StreamSubscription<ConnectivityResult>? _connectivitySubscription;
   StreamSubscription<DatabaseEvent>? _databaseSubscription;
   bool _isConnected = false;
   List<HeartRateData> _heartRateData = [];
@@ -34,19 +33,13 @@ class _HomeScreenState extends State<homeScreen> {
 
   Future<void> _checkConnection() async {
     try {
-      _connectivitySubscription = _connectivity.onConnectivityChanged.listen((ConnectivityResult result) {
-        setState(() {
-          _isConnected = (result == ConnectivityResult.wifi || result == ConnectivityResult.mobile);
-        });
-      } as void Function(List<ConnectivityResult> event)?) as StreamSubscription<ConnectivityResult>?;
-
+      // 현재 연결 상태 확인
       var connectivityResult = await _connectivity.checkConnectivity();
       setState(() {
         _isConnected = (connectivityResult == ConnectivityResult.wifi || connectivityResult == ConnectivityResult.mobile);
       });
     } catch (e) {
       print('연결 상태 확인 중 오류 발생: $e');
-      // 필요에 따라 사용자에게 오류 메시지를 표시할 수 있음
     }
   }
 
@@ -68,10 +61,8 @@ class _HomeScreenState extends State<homeScreen> {
       });
     } on FirebaseException catch (e) {
       print('FirebaseException 발생: ${e.message}');
-      // 필요에 따라 사용자에게 오류 메시지를 표시할 수 있음
     } catch (e) {
       print('일반 예외 발생: $e');
-      // 필요에 따라 사용자에게 오류 메시지를 표시할 수 있음
     }
   }
 
@@ -94,22 +85,18 @@ class _HomeScreenState extends State<homeScreen> {
       }
     } on FirebaseException catch (e) {
       print('FirebaseException 발생: ${e.message}');
-      // 필요에 따라 사용자에게 오류 메시지를 표시할 수 있음
     } catch (e) {
       print('일반 예외 발생: $e');
-      // 필요에 따라 사용자에게 오류 메시지를 표시할 수 있음
     }
   }
 
   @override
   void dispose() {
     try {
-      _connectivitySubscription?.cancel();
       _databaseSubscription?.cancel();
       _updateTimer?.cancel();
     } catch (e) {
       print('리소스 해제 중 오류 발생: $e');
-      // 필요에 따라 사용자에게 오류 메시지를 표시할 수 있음
     }
     super.dispose();
   }
@@ -125,10 +112,10 @@ class _HomeScreenState extends State<homeScreen> {
       body: _isConnected ? _buildContent(workDuration) : _buildNoConnection(),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.pushNamed(context, '/report'); // Navigate to a Report Screen
+          Navigator.pushNamed(context, '/home'); // Navigate to a Report Screen
         },
         child: Icon(Icons.report),
-        tooltip: 'Report',
+        tooltip: 'home',
       ),
     );
   }
@@ -181,7 +168,7 @@ class _HomeScreenState extends State<homeScreen> {
                           color: Colors.white24,
                           strokeWidth: 4,
                         ),
-                        FlDotData(show: true), // Provide the second argument here
+                        FlDotData(show: true),
                       );
                     }).toList();
                   },
@@ -335,6 +322,7 @@ class _HomeScreenState extends State<homeScreen> {
     );
   }
 }
+
 
 
 
