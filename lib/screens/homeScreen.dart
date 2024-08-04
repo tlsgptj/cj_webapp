@@ -25,14 +25,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
     _databaseReference.onValue.listen((event) {
       final value = event.snapshot.value as Map<dynamic, dynamic>?;
-      setState(() {
-        if (value != null) {
-          _data = value.cast<String, dynamic>();
-          _updateHeartRateAndStressData();
-        } else {
-          _data = {};
+      if (value != null) {
+        final newData = value.cast<String, dynamic>();
+        if (_data != newData) {
+          setState(() {
+            _data = newData;
+            _updateHeartRateAndStressData();
+          });
         }
-      });
+      }
     });
   }
 
@@ -43,12 +44,15 @@ class _HomeScreenState extends State<HomeScreen> {
       DateTime now = DateTime.now();
       double xValue = now.millisecondsSinceEpoch.toDouble(); // 현재 시간을 밀리초 단위로 변환
 
+      // 리스트 크기를 60으로 제한
       if (_heartRateSpots.length >= 60) {
         _heartRateSpots.removeAt(0); // 가장 오래된 데이터 제거
       }
       if (_stressLevelSpots.length >= 60) {
         _stressLevelSpots.removeAt(0); // 가장 오래된 데이터 제거
       }
+
+      // 새로운 데이터를 추가
       _heartRateSpots.add(FlSpot(xValue, heartRate));
       _stressLevelSpots.add(FlSpot(xValue, stressLevel));
     }
@@ -231,18 +235,18 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           lineBarsData: [
             LineChartBarData(
-              spots: _heartRateSpots,
-              isCurved: true,
-              color: Colors.red,
-              dotData: FlDotData(show: true),
-              belowBarData: BarAreaData(show: true, color: Colors.red.withOpacity(0.3))
+                spots: _heartRateSpots,
+                isCurved: true,
+                color: Colors.red,
+                dotData: FlDotData(show: true),
+                belowBarData: BarAreaData(show: true, color: Colors.red.withOpacity(0.3))
             ),
             LineChartBarData(
-              spots: _stressLevelSpots,
-              isCurved: true,
-              color: Colors.blue,
-              dotData: FlDotData(show: true),
-              belowBarData: BarAreaData(show: true, color: Colors.blue.withOpacity(0.3))
+                spots: _stressLevelSpots,
+                isCurved: true,
+                color: Colors.blue,
+                dotData: FlDotData(show: true),
+                belowBarData: BarAreaData(show: true, color: Colors.blue.withOpacity(0.3))
             ),
           ],
           minX: minX,
@@ -294,6 +298,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
+
 
 
 
