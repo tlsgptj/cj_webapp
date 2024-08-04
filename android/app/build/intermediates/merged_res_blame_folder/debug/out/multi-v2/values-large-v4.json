@@ -1,27 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.cj_webapp-mergeDebugResources-38:/values-large-v4/values-large-v4.xml",
+            "outputFile": "com.example.cj_webapp-mergeDebugResources-27:/values-large-v4/values-large-v4.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\USER\\.gradle\\caches\\transforms-3\\414d5e287e24a90449daf5a96e0dbbec\\transformed\\material-1.12.0\\res\\values-large-v4\\values-large-v4.xml",
-                    "from": {
-                        "startLines": "2,3,4,5",
-                        "startColumns": "4,4,4,4",
-                        "startOffsets": "55,169,285,407",
-                        "endColumns": "113,115,121,133",
-                        "endOffsets": "164,280,402,536"
-                    },
-                    "to": {
-                        "startLines": "11,12,13,14",
-                        "startColumns": "4,4,4,4",
-                        "startOffsets": "752,866,982,1104",
-                        "endColumns": "113,115,121,133",
-                        "endOffsets": "861,977,1099,1233"
-                    }
-                },
-                {
-                    "source": "C:\\Users\\USER\\.gradle\\caches\\transforms-3\\47bd90f7046486dbfb4119e9098b9ecf\\transformed\\appcompat-1.7.0\\res\\values-large-v4\\values-large-v4.xml",
+                    "source": "C:\\Users\\USER\\.gradle\\caches\\transforms-3\\ff3b659a595bc1675c202d2b54a57d10\\transformed\\appcompat-1.2.0\\res\\values-large-v4\\values-large-v4.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7,8,9,10",
                         "startColumns": "4,4,4,4,4,4,4,4,4",

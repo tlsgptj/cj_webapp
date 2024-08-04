@@ -3,4 +3,6 @@ class HeartRateData {
   final double heartRate;
 
   HeartRateData(this.timestamp, this.heartRate);
+
+  get time => null;
 }

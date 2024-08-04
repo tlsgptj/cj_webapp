@@ -27,35 +27,50 @@ class _AdminScreenState extends State<AdminScreen> {
     try {
       // Fetch alert workers
       final alertSnapshot = await _databaseRef.child('alert_workers').get();
-      final alertData = alertSnapshot.value as Map?;
-      if (alertData != null) {
-        setState(() {
-          _alertWorkers = alertData.values.map((e) => e.toString()).toList(); // Convert to List<String>
-        });
+      if (alertSnapshot.exists) {
+        final alertData = alertSnapshot.value as Map?;
+        if (alertData != null) {
+          setState(() {
+            _alertWorkers = alertData.values.map((e) => e.toString()).toList();
+          });
+        }
+      } else {
+        // Handle case where snapshot doesn't exist
+        print('No data for alert workers');
       }
 
       // Fetch current workers
       final workersSnapshot = await _databaseRef.child('current_workers').get();
-      final workersData = workersSnapshot.value as Map?;
-      if (workersData != null) {
-        setState(() {
-          _currentWorkers = workersData.values.map((e) => e.toString()).toList(); // Convert to List<String>
-        });
+      if (workersSnapshot.exists) {
+        final workersData = workersSnapshot.value as Map?;
+        if (workersData != null) {
+          setState(() {
+            _currentWorkers = workersData.values.map((e) => e.toString()).toList();
+          });
+        }
+      } else {
+        // Handle case where snapshot doesn't exist
+        print('No data for current workers');
       }
 
       // Fetch average heart rate data for chart
       final heartRateSnapshot = await _databaseRef.child('average_heart_rate_data').get();
-      final heartRateData = heartRateSnapshot.value as Map?;
-      if (heartRateData != null) {
-        final List<HeartRateData> heartRateList = heartRateData.entries.map((e) {
-          final timestamp = DateTime.parse(e.key);
-          final heartRate = (e.value as Map)['value'] as double;
-          return HeartRateData(timestamp, heartRate);
-        }).toList();
+      if (heartRateSnapshot.exists) {
+        final heartRateData = heartRateSnapshot.value as Map?;
+        if (heartRateData != null) {
+          final List<HeartRateData> heartRateList = heartRateData.entries.map((e) {
+            final timestamp = DateTime.parse(e.key);
+            final heartRate = (e.value as Map)['value'] as double;
+            return HeartRateData(timestamp, heartRate);
+          }).toList();
 
-        setState(() {
-          _averageHeartRateData = heartRateList;
-        });
+          setState(() {
+            _averageHeartRateData = heartRateList;
+          });
+        }
+      } else {
+        // Handle case where snapshot doesn't exist
+        print('No data for average heart rate');
       }
     } catch (e) {
       print('Error fetching worker data: $e');
@@ -66,16 +81,22 @@ class _AdminScreenState extends State<AdminScreen> {
     try {
       // Fetch reports
       final reportsSnapshot = await _databaseRef.child('reports').get();
-      final reportsData = reportsSnapshot.value as Map?;
-      if (reportsData != null) {
-        setState(() {
-          _reports = reportsData.values.map((e) => e.toString()).toList(); // Convert to List<String>
-        });
+      if (reportsSnapshot.exists) {
+        final reportsData = reportsSnapshot.value as Map?;
+        if (reportsData != null) {
+          setState(() {
+            _reports = reportsData.values.map((e) => e.toString()).toList();
+          });
+        }
+      } else {
+        // Handle case where snapshot doesn't exist
+        print('No data for reports');
       }
     } catch (e) {
       print('Error fetching reports: $e');
     }
   }
+
 
   void _sendMessage(String workerName) {
     // Implement message sending logic

@@ -1,327 +1,301 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:fl_chart/fl_chart.dart'; // Import the fl_chart package
-import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
+import 'package:intl/intl.dart'; // 날짜 포맷팅을 위해 추가
 
-import 'HeartRateData.dart';
+class HomeScreen extends StatefulWidget {
+  final String title;
 
-class homeScreen extends StatefulWidget {
+  const HomeScreen({Key? key, required this.title}) : super(key: key);
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<homeScreen> {
-  final DatabaseReference _databaseRef = FirebaseDatabase.instance.ref('heart_rate_data');
-  final Connectivity _connectivity = Connectivity();
-  StreamSubscription<DatabaseEvent>? _databaseSubscription;
-  bool _isConnected = false;
-  List<HeartRateData> _heartRateData = [];
-  DateTime? _startWorkTime;
-  Timer? _updateTimer;
+class _HomeScreenState extends State<HomeScreen> {
+  late DatabaseReference _databaseReference;
+  Map<String, dynamic> _data = {};
+  List<FlSpot> _heartRateSpots = [];
+  List<FlSpot> _stressLevelSpots = [];
 
   @override
   void initState() {
     super.initState();
-    _checkConnection();
-    _fetchInitialHeartRateData();
-    _updateTimer = Timer.periodic(Duration(hours: 3), (Timer t) => _fetchHeartRateData());
-    _startWorkTime = DateTime.now(); // Example start time
-  }
+    _databaseReference = FirebaseDatabase.instance.ref('users');
 
-  Future<void> _checkConnection() async {
-    try {
-      // 현재 연결 상태 확인
-      var connectivityResult = await _connectivity.checkConnectivity();
+    _databaseReference.onValue.listen((event) {
+      final value = event.snapshot.value as Map<dynamic, dynamic>?;
       setState(() {
-        _isConnected = (connectivityResult == ConnectivityResult.wifi || connectivityResult == ConnectivityResult.mobile);
-      });
-    } catch (e) {
-      print('연결 상태 확인 중 오류 발생: $e');
-    }
-  }
-
-  Future<void> _fetchInitialHeartRateData() async {
-    try {
-      _databaseSubscription = _databaseRef.onValue.listen((DatabaseEvent event) {
-        final data = event.snapshot.value as Map?;
-        if (data != null) {
-          final List<HeartRateData> heartRateList = data.entries.map((e) {
-            final timestamp = DateTime.parse(e.key);
-            final heartRate = (e.value as Map)['value'] as double;
-            return HeartRateData(timestamp, heartRate);
-          }).toList();
-
-          setState(() {
-            _heartRateData = heartRateList;
-          });
+        if (value != null) {
+          _data = value.cast<String, dynamic>();
+          _updateHeartRateAndStressData();
+        } else {
+          _data = {};
         }
       });
-    } on FirebaseException catch (e) {
-      print('FirebaseException 발생: ${e.message}');
-    } catch (e) {
-      print('일반 예외 발생: $e');
-    }
+    });
   }
 
-  Future<void> _fetchHeartRateData() async {
-    try {
-      final snapshot = await _databaseRef.get();
-      if (snapshot.exists) {
-        final data = snapshot.value as Map?;
-        if (data != null) {
-          final List<HeartRateData> heartRateList = data.entries.map((e) {
-            final timestamp = DateTime.parse(e.key);
-            final heartRate = (e.value as Map)['value'] as double;
-            return HeartRateData(timestamp, heartRate);
-          }).toList();
+  void _updateHeartRateAndStressData() {
+    if (_data.isNotEmpty) {
+      double heartRate = double.tryParse(_data['heart_rate_data'].toString()) ?? 0.0;
+      double stressLevel = double.tryParse(_data['stressLevel'].toString()) ?? 0.0;
+      DateTime now = DateTime.now();
+      double xValue = now.millisecondsSinceEpoch.toDouble(); // 현재 시간을 밀리초 단위로 변환
 
-          setState(() {
-            _heartRateData = heartRateList;
-          });
-        }
+      if (_heartRateSpots.length >= 60) {
+        _heartRateSpots.removeAt(0); // 가장 오래된 데이터 제거
       }
-    } on FirebaseException catch (e) {
-      print('FirebaseException 발생: ${e.message}');
-    } catch (e) {
-      print('일반 예외 발생: $e');
+      if (_stressLevelSpots.length >= 60) {
+        _stressLevelSpots.removeAt(0); // 가장 오래된 데이터 제거
+      }
+      _heartRateSpots.add(FlSpot(xValue, heartRate));
+      _stressLevelSpots.add(FlSpot(xValue, stressLevel));
     }
-  }
-
-  @override
-  void dispose() {
-    try {
-      _databaseSubscription?.cancel();
-      _updateTimer?.cancel();
-    } catch (e) {
-      print('리소스 해제 중 오류 발생: $e');
-    }
-    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final workDuration = _startWorkTime != null ? DateTime.now().difference(_startWorkTime!) : Duration.zero;
-
     return Scaffold(
       appBar: AppBar(
-        title: Text('CJ Health'),
+        title: Text(widget.title),
+        backgroundColor: Colors.lightBlue,
       ),
-      body: _isConnected ? _buildContent(workDuration) : _buildNoConnection(),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.pushNamed(context, '/home'); // Navigate to a Report Screen
-        },
-        child: Icon(Icons.report),
-        tooltip: 'home',
+      body: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            _buildHeartRateGraph(),
+            SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(vertical: 16.0),
+                        textStyle: TextStyle(fontSize: 20),
+                      ),
+                      onPressed: _showReportDialog,
+                      child: Text('신고'),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(vertical: 16.0),
+                        textStyle: TextStyle(fontSize: 20),
+                      ),
+                      onPressed: _showHelpDialog,
+                      child: Text('도움'),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildNoConnection() {
-    return Center(
-      child: Text('No internet connection.'),
-    );
-  }
+  Widget _buildHeartRateGraph() {
+    double minX = _heartRateSpots.isEmpty ? 0 : _heartRateSpots.first.x;
+    double maxX = _heartRateSpots.isEmpty ? DateTime.now().millisecondsSinceEpoch.toDouble() : _heartRateSpots.last.x;
+    double minY = _heartRateSpots.isEmpty && _stressLevelSpots.isEmpty
+        ? 0
+        : [
+      ..._heartRateSpots.map((e) => e.y),
+      ..._stressLevelSpots.map((e) => e.y),
+    ].reduce((a, b) => a < b ? a : b);
+    double maxY = _heartRateSpots.isEmpty && _stressLevelSpots.isEmpty
+        ? 100
+        : [
+      ..._heartRateSpots.map((e) => e.y),
+      ..._stressLevelSpots.map((e) => e.y),
+    ].reduce((a, b) => a > b ? a : b);
 
-  Widget _buildContent(Duration workDuration) {
-    // Convert data to FlSpot
-    List<FlSpot> spots = _heartRateData.map((data) => FlSpot(
-      data.timestamp.millisecondsSinceEpoch.toDouble(),
-      data.heartRate,
-    )).toList();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        CachedNetworkImage(
-          imageUrl: 'https://example.com/cj_health_image.jpg',
-          placeholder: (context, url) => CircularProgressIndicator(),
-          errorWidget: (context, url, error) => Icon(Icons.error),
-          fit: BoxFit.cover,
-          height: 200,
-          width: double.infinity,
-        ),
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Text('Time since work started: ${workDuration.inHours} hours'),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: _heartRateData.isEmpty
-              ? CircularProgressIndicator()
-              : SizedBox(
-            height: 300,
-            child: LineChart(
-              LineChartData(
-                lineTouchData: LineTouchData(
-                  getTouchedSpotIndicator: (LineChartBarData barData, List<int> spotIndexes) {
-                    return spotIndexes.map((spotIndex) {
-                      final spot = barData.spots[spotIndex];
-                      if (spot.x == 0 || spot.x == 6) {
-                        return null;
-                      }
-                      return TouchedSpotIndicatorData(
-                        FlLine(
-                          color: Colors.white24,
-                          strokeWidth: 4,
-                        ),
-                        FlDotData(show: true),
-                      );
-                    }).toList();
-                  },
-                  touchTooltipData: LineTouchTooltipData(
-                    getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
-                      return touchedBarSpots.map((barSpot) {
-                        final flSpot = barSpot;
-                        if (flSpot.x == 0 || flSpot.x == 6) {
-                          return null;
-                        }
-                        return LineTooltipItem(
-                          '${flSpot.x.toInt()}일 수면시간\n',
-                          TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          children: [
-                            TextSpan(
-                              text: '${flSpot.y.toInt()}',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                            const TextSpan(
-                              text: ' 시간 ',
-                              style: TextStyle(
-                                fontStyle: FontStyle.italic,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                          ],
-                          textAlign: TextAlign.center,
-                        );
-                      }).toList();
-                    },
-                  ),
-                ),
-                extraLinesData: ExtraLinesData(
-                  horizontalLines: [
-                    HorizontalLine(
-                      y: 6.5,
-                      color: Color(0xFFEAECFF),
-                      strokeWidth: 2,
-                      dashArray: [20, 10],
+    return Container(
+      height: 500,
+      child: LineChart(
+        LineChartData(
+          lineTouchData: LineTouchData(
+            touchTooltipData: LineTouchTooltipData(
+              getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
+                return touchedBarSpots.map((barSpot) {
+                  final flSpot = barSpot;
+                  DateTime date = DateTime.fromMillisecondsSinceEpoch(flSpot.x.toInt());
+                  return LineTooltipItem(
+                    '${DateFormat('HH:mm:ss').format(date)}\n${flSpot.y.toStringAsFixed(1)}',
+                    TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
                     ),
-                  ],
-                ),
-                gridData: FlGridData(
-                  show: true,
-                  drawVerticalLine: true,
-                  horizontalInterval: 1,
-                  verticalInterval: 1,
-                  getDrawingHorizontalLine: (value) {
-                    return FlLine(
-                      color: Colors.white10,
-                      strokeWidth: 1,
-                    );
-                  },
-                  getDrawingVerticalLine: (value) {
-                    return FlLine(
-                      color: Colors.white10,
-                      strokeWidth: 1,
-                    );
-                  },
-                ),
-                titlesData: FlTitlesData(
-                  rightTitles: AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
+                  );
+                }).toList();
+              },
+            ),
+            getTouchedSpotIndicator: (LineChartBarData barData, List<int> spotIndexes) {
+              return spotIndexes.map((spotIndex) {
+                return TouchedSpotIndicatorData(
+                  FlLine(
+                    color: Colors.white,
+                    strokeWidth: 2,
                   ),
-                  topTitles: AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 30,
-                      interval: 1,
-                      getTitlesWidget: (value, meta) {
-                        final date = DateTime.fromMillisecondsSinceEpoch(value.toInt());
-                        return SideTitleWidget(
-                          axisSide: meta.axisSide,
-                          child: Text(
-                            '${date.day}/${date.month}',
-                            style: TextStyle(fontSize: 14),
-                          ),
-                        );
-                      },
+                  FlDotData(show: true),
+                );
+              }).toList();
+            },
+          ),
+          extraLinesData: ExtraLinesData(
+            horizontalLines: [
+              HorizontalLine(
+                y: 100,
+                color: Color(0xFFEAECFF),
+                strokeWidth: 2,
+                dashArray: [10, 5],
+              ),
+            ],
+          ),
+          gridData: FlGridData(
+            show: true,
+            drawVerticalLine: true,
+            horizontalInterval: 10,
+            verticalInterval: 10,
+            getDrawingHorizontalLine: (value) {
+              return FlLine(
+                color: Colors.grey,
+                strokeWidth: 0.5,
+              );
+            },
+            getDrawingVerticalLine: (value) {
+              return FlLine(
+                color: Colors.grey,
+                strokeWidth: 0.5,
+              );
+            },
+          ),
+          titlesData: FlTitlesData(
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 40,
+                interval: 1,
+                getTitlesWidget: (value, meta) {
+                  final date = DateTime.fromMillisecondsSinceEpoch(value.toInt());
+                  return SideTitleWidget(
+                    axisSide: meta.axisSide,
+                    child: Text(
+                      DateFormat('HH:mm:ss').format(date),
+                      style: TextStyle(fontSize: 12),
                     ),
-                  ),
-                  leftTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 36,
-                      interval: 1,
-                      getTitlesWidget: (value, meta) => Text(
-                        '$value',
-                        style: TextStyle(fontSize: 14),
-                      ),
+                  );
+                },
+              ),
+            ),
+            leftTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                interval: 10,
+                reservedSize: 40,
+                getTitlesWidget: (value, meta) {
+                  return SideTitleWidget(
+                    axisSide: meta.axisSide,
+                    child: Text(
+                      value.toString(),
+                      style: TextStyle(fontSize: 12),
                     ),
-                  ),
-                ),
-                borderData: FlBorderData(
-                  show: true,
-                  border: Border.all(color: Colors.white10),
-                ),
-                minX: 0,
-                maxX: 6,
-                minY: 0,
-                maxY: 10,
-                lineBarsData: [
-                  LineChartBarData(
-                    spots: spots.isEmpty ? [FlSpot(0, 0)] : spots,
-                    isCurved: true,
-                    color: Colors.blue,
-                    gradient: LinearGradient(
-                      colors: [Colors.blue.withOpacity(0.6), Colors.blue.withOpacity(0.3)],
-                    ),
-                    barWidth: 5,
-                    isStrokeCapRound: true,
-                    dotData: FlDotData(show: false),
-                    belowBarData: BarAreaData(
-                      show: true,
-                      gradient: LinearGradient(
-                        colors: [Colors.blue.withOpacity(0.3), Colors.blue.withOpacity(0.1)],
-                      ),
-                    ),
-                  ),
-                ],
+                  );
+                },
+              ),
+            ),
+            rightTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: false,
+              ),
+            ),
+            topTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: false,
               ),
             ),
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: ElevatedButton(
-            onPressed: () {
-              Navigator.pushNamed(context, '/help'); // Navigate to a Help Screen
-            },
-            child: Text('Help'),
+          borderData: FlBorderData(
+            show: true,
+            border: Border.all(color: Colors.grey, width: 1),
           ),
+          lineBarsData: [
+            LineChartBarData(
+              spots: _heartRateSpots,
+              isCurved: true,
+              color: Colors.red,
+              dotData: FlDotData(show: true),
+              belowBarData: BarAreaData(show: true, color: Colors.red.withOpacity(0.3))
+            ),
+            LineChartBarData(
+              spots: _stressLevelSpots,
+              isCurved: true,
+              color: Colors.blue,
+              dotData: FlDotData(show: true),
+              belowBarData: BarAreaData(show: true, color: Colors.blue.withOpacity(0.3))
+            ),
+          ],
+          minX: minX,
+          maxX: maxX,
+          minY: minY,
+          maxY: maxY,
         ),
-        Spacer(),
-        Center(
-          child: Text(
-            '근무 중 자주 휴식을 취하세요.',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-        ),
-      ],
+      ),
+    );
+  }
+
+  void _showHelpDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('도움요청'),
+          content: Text('관리자에게 알림을 보냅니다.'),
+          actions: [
+            TextButton(
+              child: Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showReportDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('알림'),
+          content: Text('119에 신고가 접수되었습니다.'),
+          actions: [
+            TextButton(
+              child: Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }
+
+
 
 
 

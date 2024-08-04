@@ -1,14 +1,13 @@
-import 'package:cj_webapp/screens/registerUser.dart';
 import 'package:flutter/material.dart';
-import 'firebase_service.dart'; // FirebaseService를 사용하여 Firebase 초기화
-import 'screens/homeScreen.dart';
-import 'screens/SignUpScreen.dart';
-import 'screens/loginScreen.dart';
+import 'package:cj_webapp/screens/homeScreen.dart';
+import 'package:cj_webapp/screens/SignUpScreen.dart';
+import 'package:cj_webapp/screens/loginScreen.dart';
 import 'package:cj_webapp/screens/AdminScreen.dart';
 import 'package:cj_webapp/screens/MyPage.dart';
 import 'package:cj_webapp/screens/UserDetailScreen.dart';
 import 'package:cj_webapp/screens/chartScreen.dart';
 import 'package:cj_webapp/screens/userSearchScreen.dart';
+import 'firebase_service.dart'; // FirebaseService를 사용하여 Firebase 초기화
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,11 +23,11 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: homeScreen(),
+      home: HomeScreen(title: 'CJ Health'), // 홈 화면을 설정
       routes: {
         '/signup': (context) => SignUpScreen(),
         '/login': (context) => loginScreen(),
-        '/home': (context) => homeScreen(),
+        '/home': (context) => HomeScreen(title: 'CJ Health'), // title 전달
         '/managerMain': (context) => AdminScreen(),
         '/manageSearch': (context) => userSearchScreen(),
         '/chart': (context) => chartScreen(),

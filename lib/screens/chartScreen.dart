@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'HeartRateData.dart';
 
 class chartScreen extends StatefulWidget {
   @override
@@ -13,15 +14,40 @@ class _ChartScreenState extends State<chartScreen> {
   String _currentHeartRate = 'Loading...';
   List<HeartRateData> _dailyData = [];
   List<HeartRateData> _weeklyData = [];
+  final Connectivity _connectivity = Connectivity();
 
   @override
   void initState() {
     super.initState();
-    _fetchHeartRateData();
-    _fetchHeartRateStatistics();
+    _checkConnectivityAndFetchData();
   }
 
-  void _fetchHeartRateData() async {
+  Future<void> _checkConnectivityAndFetchData() async {
+    try {
+      var connectivityResult = await _connectivity.checkConnectivity();
+      if (connectivityResult == ConnectivityResult.none) {
+        setState(() {
+          _currentHeartRate = 'No internet connection';
+          _dailyData = [];
+          _weeklyData = [];
+        });
+        return;
+      }
+
+      await Future.wait([
+        _fetchHeartRateData(),
+        _fetchHeartRateStatistics(),
+      ]);
+    } catch (e) {
+      setState(() {
+        _currentHeartRate = 'Error checking connectivity: $e';
+        _dailyData = [];
+        _weeklyData = [];
+      });
+    }
+  }
+
+  Future<void> _fetchHeartRateData() async {
     try {
       final snapshot = await _heartRateRef.child('current').get();
       if (snapshot.exists) {
@@ -35,31 +61,38 @@ class _ChartScreenState extends State<chartScreen> {
       }
     } catch (e) {
       setState(() {
-        _currentHeartRate = 'Error fetching data';
+        _currentHeartRate = 'Error fetching data: $e';
       });
     }
   }
 
-  void _fetchHeartRateStatistics() async {
-    // Dummy data for charts
-    final List<HeartRateData> dailyData = [
-      HeartRateData(DateTime.now().subtract(Duration(days: 1)), 72),
-      HeartRateData(DateTime.now(), 75),
-    ];
-    final List<HeartRateData> weeklyData = [
-      HeartRateData(DateTime.now().subtract(Duration(days: 6)), 70),
-      HeartRateData(DateTime.now().subtract(Duration(days: 5)), 74),
-      HeartRateData(DateTime.now().subtract(Duration(days: 4)), 71),
-      HeartRateData(DateTime.now().subtract(Duration(days: 3)), 76),
-      HeartRateData(DateTime.now().subtract(Duration(days: 2)), 73),
-      HeartRateData(DateTime.now().subtract(Duration(days: 1)), 72),
-      HeartRateData(DateTime.now(), 75),
-    ];
+  Future<void> _fetchHeartRateStatistics() async {
+    try {
+      // Dummy data for charts
+      final List<HeartRateData> dailyData = [
+        HeartRateData(DateTime.now().subtract(Duration(days: 1)), 72),
+        HeartRateData(DateTime.now(), 75),
+      ];
+      final List<HeartRateData> weeklyData = [
+        HeartRateData(DateTime.now().subtract(Duration(days: 6)), 70),
+        HeartRateData(DateTime.now().subtract(Duration(days: 5)), 74),
+        HeartRateData(DateTime.now().subtract(Duration(days: 4)), 71),
+        HeartRateData(DateTime.now().subtract(Duration(days: 3)), 76),
+        HeartRateData(DateTime.now().subtract(Duration(days: 2)), 73),
+        HeartRateData(DateTime.now().subtract(Duration(days: 1)), 72),
+        HeartRateData(DateTime.now(), 75),
+      ];
 
-    setState(() {
-      _dailyData = dailyData;
-      _weeklyData = weeklyData;
-    });
+      setState(() {
+        _dailyData = dailyData;
+        _weeklyData = weeklyData;
+      });
+    } catch (e) {
+      setState(() {
+        _dailyData = [];
+        _weeklyData = [];
+      });
+    }
   }
 
   @override
@@ -97,7 +130,7 @@ class _ChartScreenState extends State<chartScreen> {
             SizedBox(
               height: 200,
               child: LineChart(
-                mainData(dailySpots),
+                _mainData(dailySpots),
               ),
             ),
             SizedBox(height: 20),
@@ -105,7 +138,7 @@ class _ChartScreenState extends State<chartScreen> {
             SizedBox(
               height: 200,
               child: LineChart(
-                mainData(weeklySpots),
+                _mainData(weeklySpots),
               ),
             ),
             Spacer(),
@@ -139,7 +172,7 @@ class _ChartScreenState extends State<chartScreen> {
     );
   }
 
-  LineChartData mainData(List<FlSpot> spots) {
+  LineChartData _mainData(List<FlSpot> spots) {
     return LineChartData(
       lineTouchData: LineTouchData(
         getTouchedSpotIndicator: (LineChartBarData barData, List<int> spotIndexes) {
@@ -271,10 +304,7 @@ class _ChartScreenState extends State<chartScreen> {
   }
 }
 
-class HeartRateData {
-  final DateTime time;
-  final int heartRate;
 
-  HeartRateData(this.time, this.heartRate);
-}
+
+
 

@@ -66,7 +66,7 @@ class _LoginScreenState extends State<loginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Login Screen'),
+        title: Text('Login'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -75,7 +75,7 @@ class _LoginScreenState extends State<loginScreen> {
           children: [
             TextField(
               controller: _emailController,
-              decoration: InputDecoration(labelText: 'Email'),
+              decoration: InputDecoration(labelText: 'ID'),
               keyboardType: TextInputType.emailAddress,
             ),
             TextField(
@@ -86,12 +86,24 @@ class _LoginScreenState extends State<loginScreen> {
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: _loginWithEmailAndPassword,
-              child: Text('Login'),
+              child: Text('로그인'),
             ),
             SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _authenticateWithBiometrics,
-              child: Text('Log in with Biometrics'),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  onPressed: _authenticateWithBiometrics,
+                  child: Text('지문으로 로그인'),
+                ),
+                SizedBox(width: 20),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/signup');
+                  },
+                  child: Text('회원가입'),
+                ),
+              ],
             ),
           ],
         ),
