@@ -45,20 +45,21 @@ class _ChartScreenState extends State<chartScreen> {
   void _initializeDummyData() {
     // Populate with initial dummy data
     final DateTime now = DateTime.now();
-    final List<HeartRateData> initialDailyData = [
-      HeartRateData(now.subtract(Duration(days: 1)), 72),
-      HeartRateData(now, 75),
-    ];
+    final List<HeartRateData> initialDailyData = List.generate(
+      24, // 24 hours in a day
+          (index) => HeartRateData(
+        now.subtract(Duration(hours: index)),
+        60 + _random.nextDouble(), // Random value between 60 and 100
+      ),
+    ).reversed.toList(); // Reverse to have the most recent first
 
-    final List<HeartRateData> initialWeeklyData = [
-      HeartRateData(now.subtract(Duration(days: 6)), 70),
-      HeartRateData(now.subtract(Duration(days: 5)), 74),
-      HeartRateData(now.subtract(Duration(days: 4)), 71),
-      HeartRateData(now.subtract(Duration(days: 3)), 76),
-      HeartRateData(now.subtract(Duration(days: 2)), 73),
-      HeartRateData(now.subtract(Duration(days: 1)), 72),
-      HeartRateData(now, 75),
-    ];
+    final List<HeartRateData> initialWeeklyData = List.generate(
+      7, // 7 days in a week
+          (index) => HeartRateData(
+        now.subtract(Duration(days: index)),
+        60 + _random.nextDouble(), // Random value between 60 and 100
+      ),
+    ).reversed.toList(); // Reverse to have the most recent first
 
     setState(() {
       _dailyData = initialDailyData;
@@ -124,18 +125,18 @@ class _ChartScreenState extends State<chartScreen> {
 
   void _startHeartRateUpdates() {
     _timer = Timer.periodic(Duration(minutes: 10), (timer) {
-      int newHeartRate = 150 + _random.nextInt(40); // Random heart rate between 60 and 100
+      int newHeartRate = 60 + _random.nextInt(40); // Random heart rate between 60 and 100
 
       setState(() {
         _currentHeartRate = newHeartRate.toString();
 
-        // Add to daily data and maintain a max of 10 data points
+        // Add to daily data and maintain a max of 24 data points (one per hour)
         _dailyData.add(HeartRateData(DateTime.now(), newHeartRate.toDouble()));
-        if (_dailyData.length > 10) {
+        if (_dailyData.length > 24) {
           _dailyData.removeAt(0);
         }
 
-        // Add to weekly data and maintain a max of 7 data points
+        // Add to weekly data and maintain a max of 7 data points (one per day)
         _weeklyData.add(HeartRateData(DateTime.now(), newHeartRate.toDouble()));
         if (_weeklyData.length > 7) {
           _weeklyData.removeAt(0);
@@ -149,13 +150,13 @@ class _ChartScreenState extends State<chartScreen> {
     List<FlSpot> dailySpots = _dailyData
         .asMap()
         .entries
-        .map((entry) => FlSpot(entry.key.toDouble() * 10, entry.value.heartRate))
+        .map((entry) => FlSpot(entry.key.toDouble(), entry.value.heartRate))
         .toList();
 
     List<FlSpot> weeklySpots = _weeklyData
         .asMap()
         .entries
-        .map((entry) => FlSpot(entry.key.toDouble() * 10, entry.value.heartRate))
+        .map((entry) => FlSpot(entry.key.toDouble(), entry.value.heartRate))
         .toList();
 
     int currentHeartRate = int.tryParse(_currentHeartRate) ?? 0;
@@ -241,6 +242,15 @@ class _ChartScreenState extends State<chartScreen> {
                 ),
               ),
               SizedBox(height: 20),
+              Text(
+                '하루 동안의 심박수 그래프',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 10),
               Container(
                 width: double.infinity,
                 height: 300,
@@ -257,6 +267,15 @@ class _ChartScreenState extends State<chartScreen> {
                 ),
               ),
               SizedBox(height: 20),
+              Text(
+                '일주일 심박수 그래프',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 10),
               Container(
                 width: double.infinity,
                 height: 300,
@@ -444,7 +463,7 @@ class _ChartScreenState extends State<chartScreen> {
       ),
       minX: spots.isEmpty ? 0 : spots.first.x,
       maxX: spots.isEmpty ? 1 : spots.last.x,
-      minY: 90,
+      minY: 60,
       maxY: 200,
       lineBarsData: [
         LineChartBarData(
@@ -471,8 +490,6 @@ class _ChartScreenState extends State<chartScreen> {
     );
   }
 }
-
-
 
 
 
