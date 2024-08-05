@@ -124,7 +124,7 @@ class _ChartScreenState extends State<chartScreen> {
 
   void _startHeartRateUpdates() {
     _timer = Timer.periodic(Duration(minutes: 10), (timer) {
-      int newHeartRate = 100 + _random.nextInt(40); // Random heart rate between 60 and 100
+      int newHeartRate = 150 + _random.nextInt(40); // Random heart rate between 60 and 100
 
       setState(() {
         _currentHeartRate = newHeartRate.toString();
