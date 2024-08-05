@@ -205,7 +205,7 @@ class _ChartScreenState extends State<chartScreen> {
                 leading: Icon(Icons.timer),
               title: Text('뽀모도로'),
               onTap: () {
-                Navigator.pushNamed(context, '/time');
+                Navigator.pushNamed(context, '/rest');
               },
             ),
             ListTile(
