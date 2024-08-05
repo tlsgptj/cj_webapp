@@ -181,27 +181,38 @@ class _ChartScreenState extends State<chartScreen> {
               ),
             ),
             ListTile(
+                leading: Icon(Icons.home),
               title: Text('Home'),
               onTap: () {
                 Navigator.pushNamed(context, '/home');
               },
             ),
             ListTile(
-              title: Text('119신고내역'),
+                leading: Icon(Icons.report),
+              title: Text('신고내역조회'),
               onTap: () {
                 Navigator.pushNamed(context, '/Detail');
               },
             ),
             ListTile(
+                leading: Icon(Icons.person),
               title: Text('My Page'),
               onTap: () {
                 Navigator.pushNamed(context, '/mypage');
               },
             ),
             ListTile(
+                leading: Icon(Icons.timer),
               title: Text('뽀모도로'),
               onTap: () {
                 Navigator.pushNamed(context, '/time');
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.logout),
+              title: Text('logout'),
+              onTap: () {
+                Navigator.pushNamed(context, '/login');
               },
             ),
           ],
