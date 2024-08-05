@@ -42,6 +42,7 @@ class _ChartScreenState extends State<chartScreen> {
     super.dispose();
   }
 
+   // Reverse to have the most recent first
   void _initializeDummyData() {
     // Populate with initial dummy data
     final DateTime now = DateTime.now();
@@ -49,7 +50,7 @@ class _ChartScreenState extends State<chartScreen> {
       24, // 24 hours in a day
           (index) => HeartRateData(
         now.subtract(Duration(hours: index)),
-        60 + _random.nextDouble(), // Random value between 60 and 100
+        100 + _random.nextDouble() * 40, // Random value between 100 and 140
       ),
     ).reversed.toList(); // Reverse to have the most recent first
 
@@ -57,7 +58,7 @@ class _ChartScreenState extends State<chartScreen> {
       7, // 7 days in a week
           (index) => HeartRateData(
         now.subtract(Duration(days: index)),
-        60 + _random.nextDouble(), // Random value between 60 and 100
+        100 + _random.nextDouble() * 40, // Random value between 100 and 140
       ),
     ).reversed.toList(); // Reverse to have the most recent first
 
@@ -66,6 +67,7 @@ class _ChartScreenState extends State<chartScreen> {
       _weeklyData = initialWeeklyData;
     });
   }
+
 
   Future<void> _checkConnectivityAndFetchData() async {
     try {
@@ -252,7 +254,7 @@ class _ChartScreenState extends State<chartScreen> {
               ),
               SizedBox(height: 10),
               Container(
-                width: double.infinity,
+                width: 700,
                 height: 300,
                 margin: EdgeInsets.symmetric(horizontal: 16),
                 decoration: ShapeDecoration(
@@ -277,7 +279,7 @@ class _ChartScreenState extends State<chartScreen> {
               ),
               SizedBox(height: 10),
               Container(
-                width: double.infinity,
+                width: 700,
                 height: 300,
                 margin: EdgeInsets.symmetric(horizontal: 16),
                 decoration: ShapeDecoration(
@@ -378,7 +380,7 @@ class _ChartScreenState extends State<chartScreen> {
                 ),
                 children: [
                   TextSpan(
-                    text: '${flSpot.y.toInt()} bpm',
+                    text: '${flSpot.y.toInt()}',
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w900,
@@ -451,7 +453,7 @@ class _ChartScreenState extends State<chartScreen> {
             reservedSize: 36,
             interval: 10,
             getTitlesWidget: (value, meta) => Text(
-              '$value bpm',
+              '$value',
               style: TextStyle(fontSize: 10),
             ),
           ),
