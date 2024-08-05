@@ -1,18 +1,19 @@
-import 'package:cj_webapp/screens/AdminScreen.dart';
-import 'package:cj_webapp/screens/MyPage.dart';
-import 'package:cj_webapp/screens/SignUpScreen.dart';
-import 'package:cj_webapp/screens/UserDetailScreen.dart';
-import 'package:cj_webapp/screens/chartScreen.dart';
-import 'package:cj_webapp/screens/homeScreen.dart';
-import 'package:cj_webapp/screens/loginScreen.dart';
-import 'package:cj_webapp/screens/restTimeScreen.dart';
+import 'package:cj_webapp/admin/AdminScreen.dart';
+import 'package:cj_webapp/users/DetailChartScreen.dart';
+import 'package:cj_webapp/users/MyPage.dart';
+import 'package:cj_webapp/users/SignUpScreen.dart';
+import 'package:cj_webapp/users/UserDetailScreen.dart';
+import 'package:cj_webapp/users/chartScreen.dart';
+import 'package:cj_webapp/users/homeScreen.dart';
+import 'package:cj_webapp/users/loginScreen.dart';
+import 'package:cj_webapp/users/restTimeScreen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 import 'firebase_options.dart';
-import 'screens/userSearchScreen.dart';
+import 'admin/userSearchScreen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -48,6 +49,7 @@ class MyApp extends StatelessWidget {
         '/Detail': (context) => UserDetailScreen(userId: null),
         '/mypage': (context) => MyPage(),
         '/rest': (context) => RestTimeScreen(),
+        '/DetailScreen': (context) => Detailchartscreen()
       },
     );
   }

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import 'MemberSelectionScreen.dart';
+import '../admin/MemberSelectionScreen.dart';
 
 class loginScreen extends StatefulWidget {
   @override

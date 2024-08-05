@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'UserDetailScreen.dart';
+import '../users/UserDetailScreen.dart';
 
 class userSearchScreen extends StatefulWidget {
   @override

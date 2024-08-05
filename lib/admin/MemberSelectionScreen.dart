@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'SignUpScreen.dart';
+import '../users/SignUpScreen.dart';
 
 class MemberSelectionScreen extends StatelessWidget {
   @override
