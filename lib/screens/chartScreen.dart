@@ -124,7 +124,7 @@ class _ChartScreenState extends State<chartScreen> {
 
   void _startHeartRateUpdates() {
     _timer = Timer.periodic(Duration(minutes: 10), (timer) {
-      int newHeartRate = 60 + _random.nextInt(40); // Random heart rate between 60 and 100
+      int newHeartRate = 100 + _random.nextInt(40); // Random heart rate between 60 and 100
 
       setState(() {
         _currentHeartRate = newHeartRate.toString();
@@ -234,7 +234,7 @@ class _ChartScreenState extends State<chartScreen> {
               ),
               SizedBox(height: 10),
               Text(
-                currentHeartRate > 150 ? '안정을 취하세요' : '심박수가 정상입니다',
+                currentHeartRate >= 150 ? '안정을 취하세요' : '심박수가 정상입니다',
                 style: TextStyle(
                   fontSize: 18,
                   color: Colors.black,
@@ -286,16 +286,16 @@ class _ChartScreenState extends State<chartScreen> {
                       ),
                     ),
                     TextSpan(
-                      text: '48 ',
+                      text: '150',
                       style: TextStyle(
-                        color: Color(0xFF006ECD),
+                        color: Colors.red,
                         fontSize: 32,
                         fontFamily: 'Noto Sans HK',
                         fontWeight: FontWeight.w400,
                       ),
                     ),
                     TextSpan(
-                      text: 'bpm (저심박수)\n',
+                      text: 'bpm (고심박수)\n',
                       style: TextStyle(
                         color: Colors.black,
                         fontSize: 25,
@@ -304,7 +304,7 @@ class _ChartScreenState extends State<chartScreen> {
                       ),
                     ),
                     TextSpan(
-                      text: '심박수가 다소 낮습니다. 피곤하거나 무기력을 느낀다면, 잠시 휴식을 취하고 심호흡을 해보세요.',
+                      text: '심박수가 다소 높습니다. 열사병에 걸릴 위험이 있으니, 잠시 휴식을 취하고 심호흡을 해보세요.',
                       style: TextStyle(
                         color: Colors.black,
                         fontSize: 20,
@@ -375,8 +375,14 @@ class _ChartScreenState extends State<chartScreen> {
       extraLinesData: ExtraLinesData(
         horizontalLines: [
           HorizontalLine(
-            y: 80, // 목표 수치
-            color: Color(0xFFEAECFF),
+            y: 110, // First target line
+            color: Colors.red,
+            strokeWidth: 2,
+            dashArray: [20, 10],
+          ),
+          HorizontalLine(
+            y: 150, // Second target line
+            color: Colors.orange,
             strokeWidth: 2,
             dashArray: [20, 10],
           ),
@@ -438,8 +444,8 @@ class _ChartScreenState extends State<chartScreen> {
       ),
       minX: spots.isEmpty ? 0 : spots.first.x,
       maxX: spots.isEmpty ? 1 : spots.last.x,
-      minY: spots.isEmpty ? 0 : spots.reduce((a, b) => a.y < b.y ? a : b).y - 10,
-      maxY: spots.isEmpty ? 100 : spots.reduce((a, b) => a.y > b.y ? a : b).y + 10,
+      minY: 90,
+      maxY: 200,
       lineBarsData: [
         LineChartBarData(
           spots: spots,
