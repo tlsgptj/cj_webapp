@@ -137,6 +137,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ListTile(title: Text('119 신고현황'), onTap: () => Navigator.pushNamed(context, '/call119')),
           ListTile(title: Text('마이페이지'), onTap: () => Navigator.pushNamed(context, '/mypage')),
           ListTile(title: Text('로그아웃'), onTap: () => Navigator.pushNamed(context, '/login')),
+          ListTile(title: Text('뽀모도로'), onTap: () => Navigator.pushNamed(context, '/rest')),
         ],
       ),
     );
@@ -205,7 +206,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _actionButton(String label, IconData icon, Color color, String message) {
     return ElevatedButton.icon(
-      icon: Icon(icon, color: Colors.white),
+      icon: Icon(icon, color: Colors.white, size: 40),
       label: Text(label, style: TextStyle(fontSize: 40)),
       style: ElevatedButton.styleFrom(
         foregroundColor: Colors.white,

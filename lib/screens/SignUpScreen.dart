@@ -73,7 +73,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         'name': name,
         'phone': phone,
         'gender': _selectedGender,
-        'role': widget.role,
+        'role': widget.role,//admin이랑 users생성
         'profileImageUrl': imageUrl,
       });
 

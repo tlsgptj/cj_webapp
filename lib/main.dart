@@ -5,13 +5,20 @@ import 'package:cj_webapp/screens/UserDetailScreen.dart';
 import 'package:cj_webapp/screens/chartScreen.dart';
 import 'package:cj_webapp/screens/homeScreen.dart';
 import 'package:cj_webapp/screens/loginScreen.dart';
+import 'package:cj_webapp/screens/restTimeScreen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
+import 'firebase_options.dart';
 import 'screens/userSearchScreen.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  ); // Firebase 초기화
   runApp(MyApp());
 }
 
@@ -23,7 +30,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'CJ Health',
-      initialRoute: '/',
+      initialRoute: '/login',
       routes: {
         '/': (context) => HomeScreen(title: 'CJ Health'),
         '/signup': (context) => SignUpScreen(role: 'admin'),
@@ -40,6 +47,7 @@ class MyApp extends StatelessWidget {
         '/chart': (context) => chartScreen(),
         '/Detail': (context) => UserDetailScreen(userId: null),
         '/mypage': (context) => MyPage(),
+        '/rest': (context) => RestTimeScreen(),
       },
     );
   }

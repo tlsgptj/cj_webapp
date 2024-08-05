@@ -5,13 +5,16 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
+import 'HeartRateData.dart';
+
 class chartScreen extends StatefulWidget {
   @override
   _ChartScreenState createState() => _ChartScreenState();
 }
 
 class _ChartScreenState extends State<chartScreen> {
-  final DatabaseReference _heartRateRef = FirebaseDatabase.instance.ref().child('heart_rate');
+  final DatabaseReference _heartRateRef =
+  FirebaseDatabase.instance.ref().child('heart_rate');
   String _currentHeartRate = 'Loading...';
   List<HeartRateData> _dailyData = [];
   List<HeartRateData> _weeklyData = [];
@@ -22,7 +25,14 @@ class _ChartScreenState extends State<chartScreen> {
   @override
   void initState() {
     super.initState();
+
+    // Initialize with dummy data
+    _initializeDummyData();
+
+    // Check connectivity and fetch data
     _checkConnectivityAndFetchData();
+
+    // Start periodic updates
     _startHeartRateUpdates();
   }
 
@@ -30,6 +40,30 @@ class _ChartScreenState extends State<chartScreen> {
   void dispose() {
     _timer?.cancel(); // Cancel the timer when the widget is disposed
     super.dispose();
+  }
+
+  void _initializeDummyData() {
+    // Populate with initial dummy data
+    final DateTime now = DateTime.now();
+    final List<HeartRateData> initialDailyData = [
+      HeartRateData(now.subtract(Duration(days: 1)), 72),
+      HeartRateData(now, 75),
+    ];
+
+    final List<HeartRateData> initialWeeklyData = [
+      HeartRateData(now.subtract(Duration(days: 6)), 70),
+      HeartRateData(now.subtract(Duration(days: 5)), 74),
+      HeartRateData(now.subtract(Duration(days: 4)), 71),
+      HeartRateData(now.subtract(Duration(days: 3)), 76),
+      HeartRateData(now.subtract(Duration(days: 2)), 73),
+      HeartRateData(now.subtract(Duration(days: 1)), 72),
+      HeartRateData(now, 75),
+    ];
+
+    setState(() {
+      _dailyData = initialDailyData;
+      _weeklyData = initialWeeklyData;
+    });
   }
 
   Future<void> _checkConnectivityAndFetchData() async {
@@ -71,31 +105,15 @@ class _ChartScreenState extends State<chartScreen> {
       }
     } catch (e) {
       setState(() {
-        _currentHeartRate = 'Error fetching data: $e';
+        _currentHeartRate = 'User1';
       });
     }
   }
 
   Future<void> _fetchHeartRateStatistics() async {
+    // This function can be used to fetch additional statistics if needed
     try {
-      final List<HeartRateData> dailyData = [
-        HeartRateData(DateTime.now().subtract(Duration(days: 1)), 72),
-        HeartRateData(DateTime.now(), 75),
-      ];
-      final List<HeartRateData> weeklyData = [
-        HeartRateData(DateTime.now().subtract(Duration(days: 6)), 70),
-        HeartRateData(DateTime.now().subtract(Duration(days: 5)), 74),
-        HeartRateData(DateTime.now().subtract(Duration(days: 4)), 71),
-        HeartRateData(DateTime.now().subtract(Duration(days: 3)), 76),
-        HeartRateData(DateTime.now().subtract(Duration(days: 2)), 73),
-        HeartRateData(DateTime.now().subtract(Duration(days: 1)), 72),
-        HeartRateData(DateTime.now(), 75),
-      ];
-
-      setState(() {
-        _dailyData = dailyData;
-        _weeklyData = weeklyData;
-      });
+      // Add any additional fetching logic here if necessary
     } catch (e) {
       setState(() {
         _dailyData = [];
@@ -106,20 +124,21 @@ class _ChartScreenState extends State<chartScreen> {
 
   void _startHeartRateUpdates() {
     _timer = Timer.periodic(Duration(minutes: 10), (timer) {
-      // Simulate heart rate change with random values
-      int newHeartRate = 60 + _random.nextInt(100);
+      int newHeartRate = 60 + _random.nextInt(40); // Random heart rate between 60 and 100
+
       setState(() {
         _currentHeartRate = newHeartRate.toString();
-        // Update daily data with the new heart rate
-        _dailyData.add(HeartRateData(DateTime.now(), newHeartRate));
+
+        // Add to daily data and maintain a max of 10 data points
+        _dailyData.add(HeartRateData(DateTime.now(), newHeartRate.toDouble()));
         if (_dailyData.length > 10) {
-          _dailyData.removeAt(0); // Keep the list at a maximum of 10 entries
+          _dailyData.removeAt(0);
         }
 
-        // Update weekly data
-        _weeklyData.add(HeartRateData(DateTime.now(), newHeartRate));
+        // Add to weekly data and maintain a max of 7 data points
+        _weeklyData.add(HeartRateData(DateTime.now(), newHeartRate.toDouble()));
         if (_weeklyData.length > 7) {
-          _weeklyData.removeAt(0); // Keep the list at a maximum of 7 entries
+          _weeklyData.removeAt(0);
         }
       });
     });
@@ -128,24 +147,22 @@ class _ChartScreenState extends State<chartScreen> {
   @override
   Widget build(BuildContext context) {
     List<FlSpot> dailySpots = _dailyData
-        .map((data) => FlSpot(
-      data.time.millisecondsSinceEpoch.toDouble(),
-      data.heartRate.toDouble(),
-    ))
+        .asMap()
+        .entries
+        .map((entry) => FlSpot(entry.key.toDouble() * 10, entry.value.heartRate))
         .toList();
 
     List<FlSpot> weeklySpots = _weeklyData
-        .map((data) => FlSpot(
-      data.time.millisecondsSinceEpoch.toDouble(),
-      data.heartRate.toDouble(),
-    ))
+        .asMap()
+        .entries
+        .map((entry) => FlSpot(entry.key.toDouble() * 10, entry.value.heartRate))
         .toList();
 
     int currentHeartRate = int.tryParse(_currentHeartRate) ?? 0;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('My Page'),
+        title: Text('My Chart'),
       ),
       drawer: Drawer(
         child: ListView(
@@ -167,13 +184,7 @@ class _ChartScreenState extends State<chartScreen> {
               },
             ),
             ListTile(
-              title: Text('Login'),
-              onTap: () {
-                Navigator.pushNamed(context, '/login');
-              },
-            ),
-            ListTile(
-              title: Text('119신고'),
+              title: Text('119신고내역'),
               onTap: () {
                 Navigator.pushNamed(context, '/call119');
               },
@@ -206,7 +217,7 @@ class _ChartScreenState extends State<chartScreen> {
                   '심장박동수 통계',
                   style: TextStyle(
                     color: Colors.black,
-                    fontSize: 32,
+                    fontSize: 24,
                     fontFamily: 'Noto Sans HK',
                     fontWeight: FontWeight.bold,
                   ),
@@ -216,7 +227,7 @@ class _ChartScreenState extends State<chartScreen> {
               Text(
                 'Current Heart Rate: $_currentHeartRate bpm',
                 style: TextStyle(
-                  fontSize: 24,
+                  fontSize: 20,
                   color: currentHeartRate > 150 ? Colors.red : Colors.green,
                   fontWeight: FontWeight.bold,
                 ),
@@ -231,13 +242,12 @@ class _ChartScreenState extends State<chartScreen> {
               ),
               SizedBox(height: 20),
               Container(
-                width: 1173,
-                height: 418,
+                width: double.infinity,
+                height: 300,
                 margin: EdgeInsets.symmetric(horizontal: 16),
                 decoration: ShapeDecoration(
                   color: Colors.white,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(5)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -248,13 +258,12 @@ class _ChartScreenState extends State<chartScreen> {
               ),
               SizedBox(height: 20),
               Container(
-                width: 1173,
-                height: 425,
+                width: double.infinity,
+                height: 300,
                 margin: EdgeInsets.symmetric(horizontal: 16),
                 decoration: ShapeDecoration(
                   color: Colors.white,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(5)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -289,7 +298,7 @@ class _ChartScreenState extends State<chartScreen> {
                       text: 'bpm (저심박수)\n',
                       style: TextStyle(
                         color: Colors.black,
-                        fontSize: 32,
+                        fontSize: 25,
                         fontFamily: 'Noto Sans HK',
                         fontWeight: FontWeight.w400,
                       ),
@@ -298,7 +307,7 @@ class _ChartScreenState extends State<chartScreen> {
                       text: '심박수가 다소 낮습니다. 피곤하거나 무기력을 느낀다면, 잠시 휴식을 취하고 심호흡을 해보세요.',
                       style: TextStyle(
                         color: Colors.black,
-                        fontSize: 28,
+                        fontSize: 20,
                         fontFamily: 'Noto Sans HK',
                         fontWeight: FontWeight.w400,
                       ),
@@ -311,7 +320,7 @@ class _ChartScreenState extends State<chartScreen> {
                 '다음 주 근무 중 자주 휴식을 취하시길 바랍니다',
                 style: TextStyle(
                   color: Colors.black,
-                  fontSize: 24,
+                  fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -326,8 +335,7 @@ class _ChartScreenState extends State<chartScreen> {
   LineChartData _mainData(List<FlSpot> spots) {
     return LineChartData(
       lineTouchData: LineTouchData(
-        getTouchedSpotIndicator:
-            (LineChartBarData barData, List<int> spotIndexes) {
+        getTouchedSpotIndicator: (LineChartBarData barData, List<int> spotIndexes) {
           return spotIndexes.map((spotIndex) {
             final spot = barData.spots[spotIndex];
             return TouchedSpotIndicatorData(
@@ -344,7 +352,7 @@ class _ChartScreenState extends State<chartScreen> {
             return touchedBarSpots.map((barSpot) {
               final flSpot = barSpot;
               return LineTooltipItem(
-                '${DateTime.fromMillisecondsSinceEpoch(flSpot.x.toInt()).day}/${DateTime.fromMillisecondsSinceEpoch(flSpot.x.toInt()).month}\n',
+                'Day ${flSpot.x.toInt()} \n',
                 TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -405,10 +413,9 @@ class _ChartScreenState extends State<chartScreen> {
             reservedSize: 30,
             interval: 1,
             getTitlesWidget: (value, meta) {
-              final date = DateTime.fromMillisecondsSinceEpoch(value.toInt());
               return SideTitleWidget(
                 axisSide: meta.axisSide,
-                child: Text('${date.day}/${date.month}'),
+                child: Text('${value.toInt()}'),
               );
             },
           ),
@@ -420,7 +427,7 @@ class _ChartScreenState extends State<chartScreen> {
             interval: 10,
             getTitlesWidget: (value, meta) => Text(
               '$value bpm',
-              style: TextStyle(fontSize: 14),
+              style: TextStyle(fontSize: 10),
             ),
           ),
         ),
@@ -459,12 +466,6 @@ class _ChartScreenState extends State<chartScreen> {
   }
 }
 
-class HeartRateData {
-  final DateTime time;
-  final int heartRate;
-
-  HeartRateData(this.time, this.heartRate);
-}
 
 
 

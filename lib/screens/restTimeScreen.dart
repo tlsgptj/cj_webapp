@@ -1,7 +1,5 @@
 import 'dart:async';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 
 class RestTimeScreen extends StatefulWidget {
   @override
@@ -35,18 +33,26 @@ class _RestTimeScreenState extends State<RestTimeScreen> {
       final duration = selectedDateTime.difference(now);
 
       _timer?.cancel(); // Cancel any existing timer
-      _timer = Timer(duration, _showWorkToast);
+      _timer = Timer(duration, _showWorkSnackBar);
     }
   }
 
-  void _showWorkToast() {
-    Fluttertoast.showToast(
-      msg: "It's time to get back to work!",
-      toastLength: Toast.LENGTH_SHORT,
-      gravity: ToastGravity.BOTTOM,
-      backgroundColor: Colors.black,
-      textColor: Colors.white,
-      fontSize: 16.0,
+  void _showWorkSnackBar() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("다시 일할 시간이에요!! 힘내보아요:)"),
+        duration: Duration(days: 1), // Set a long duration
+        action: SnackBarAction(
+          label: "확인",
+          textColor: Colors.white,
+          onPressed: () {
+            // Dismiss the snackbar
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          },
+        ),
+        backgroundColor: Colors.black,
+        behavior: SnackBarBehavior.floating,
+      ),
     );
   }
 
@@ -60,7 +66,7 @@ class _RestTimeScreenState extends State<RestTimeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Set Your Break Time'),
+        title: Text('뽀모도로 설정'),
       ),
       drawer: Drawer(
         child: ListView(
@@ -77,9 +83,9 @@ class _RestTimeScreenState extends State<RestTimeScreen> {
             ),
             ListTile(title: Text('Home'), onTap: () => Navigator.pushNamed(context, '/home')),
             ListTile(title: Text('Login'), onTap: () => Navigator.pushNamed(context, '/login')),
-            ListTile(title: Text('Chart Details'), onTap: () => Navigator.pushNamed(context, '/chart')),
-            ListTile(title: Text('Report 119'), onTap: () => Navigator.pushNamed(context, '/call119')),
-            ListTile(title: Text('My Page'), onTap: () => Navigator.pushNamed(context, '/mypage')),
+            ListTile(title: Text('차트보기'), onTap: () => Navigator.pushNamed(context, '/chart')),
+            ListTile(title: Text('119신고'), onTap: () => Navigator.pushNamed(context, '/call119')),
+            ListTile(title: Text('마이페이지'), onTap: () => Navigator.pushNamed(context, '/mypage')),
             ListTile(title: Text('LogOut'), onTap: () => Navigator.pushNamed(context, '/login')),
           ],
         ),
@@ -92,13 +98,24 @@ class _RestTimeScreenState extends State<RestTimeScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(
-                'Selected break time: ${_selectedTime?.format(context) ?? 'Not set'}',
-                style: TextStyle(fontSize: 20),
+                '쉬는 시간을 설정하세요!: ${_selectedTime?.format(context) ?? '쉬는 시간이 설정되지 않았습니다.'}',
+                style: TextStyle(fontSize: 30),
+                textAlign: TextAlign.center,
               ),
-              SizedBox(height: 20),
-              ElevatedButton(
+              SizedBox(height: 30),
+              ElevatedButton.icon(
                 onPressed: _pickTime,
-                child: Text('Pick Break Time'),
+                icon: Icon(Icons.timer, size: 30),
+                label: Text('뽀모도로 설정'),
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.blueAccent, // Text color
+                  padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 5,
+                ),
               ),
             ],
           ),
@@ -107,4 +124,5 @@ class _RestTimeScreenState extends State<RestTimeScreen> {
     );
   }
 }
+
 
