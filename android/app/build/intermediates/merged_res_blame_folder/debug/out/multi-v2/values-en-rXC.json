@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.cj_webapp-mergeDebugResources-27:/values-en-rXC/values-en-rXC.xml",
+            "outputFile": "com.example.cj_webapp-mergeDebugResources-29:/values-en-rXC/values-en-rXC.xml",
             "map": [
                 {
                     "source": "C:\\Users\\USER\\.gradle\\caches\\transforms-3\\1e4a221f57d8bd5c06f528eb75258343\\transformed\\biometric-1.1.0\\res\\values-en-rXC\\values-en-rXC.xml",

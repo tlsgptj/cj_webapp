@@ -1,8 +1,9 @@
+import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'HeartRateData.dart';
 
 class chartScreen extends StatefulWidget {
   @override
@@ -15,11 +16,20 @@ class _ChartScreenState extends State<chartScreen> {
   List<HeartRateData> _dailyData = [];
   List<HeartRateData> _weeklyData = [];
   final Connectivity _connectivity = Connectivity();
+  final Random _random = Random();
+  Timer? _timer;
 
   @override
   void initState() {
     super.initState();
     _checkConnectivityAndFetchData();
+    _startHeartRateUpdates();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel(); // Cancel the timer when the widget is disposed
+    super.dispose();
   }
 
   Future<void> _checkConnectivityAndFetchData() async {
@@ -68,7 +78,6 @@ class _ChartScreenState extends State<chartScreen> {
 
   Future<void> _fetchHeartRateStatistics() async {
     try {
-      // Dummy data for charts
       final List<HeartRateData> dailyData = [
         HeartRateData(DateTime.now().subtract(Duration(days: 1)), 72),
         HeartRateData(DateTime.now(), 75),
@@ -95,78 +104,220 @@ class _ChartScreenState extends State<chartScreen> {
     }
   }
 
+  void _startHeartRateUpdates() {
+    _timer = Timer.periodic(Duration(minutes: 10), (timer) {
+      // Simulate heart rate change with random values
+      int newHeartRate = 60 + _random.nextInt(100);
+      setState(() {
+        _currentHeartRate = newHeartRate.toString();
+        // Update daily data with the new heart rate
+        _dailyData.add(HeartRateData(DateTime.now(), newHeartRate));
+        if (_dailyData.length > 10) {
+          _dailyData.removeAt(0); // Keep the list at a maximum of 10 entries
+        }
+
+        // Update weekly data
+        _weeklyData.add(HeartRateData(DateTime.now(), newHeartRate));
+        if (_weeklyData.length > 7) {
+          _weeklyData.removeAt(0); // Keep the list at a maximum of 7 entries
+        }
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    List<FlSpot> dailySpots = _dailyData.map((data) => FlSpot(
+    List<FlSpot> dailySpots = _dailyData
+        .map((data) => FlSpot(
       data.time.millisecondsSinceEpoch.toDouble(),
       data.heartRate.toDouble(),
-    )).toList();
+    ))
+        .toList();
 
-    List<FlSpot> weeklySpots = _weeklyData.map((data) => FlSpot(
+    List<FlSpot> weeklySpots = _weeklyData
+        .map((data) => FlSpot(
       data.time.millisecondsSinceEpoch.toDouble(),
       data.heartRate.toDouble(),
-    )).toList();
+    ))
+        .toList();
+
+    int currentHeartRate = int.tryParse(_currentHeartRate) ?? 0;
 
     return Scaffold(
       appBar: AppBar(
         title: Text('My Page'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Image.asset(
-                'assets/cj_health.png', // 실제 경로로 변경
-                width: 100,
-                height: 100,
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: <Widget>[
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.blue,
               ),
-            ),
-            SizedBox(height: 20),
-            Text('Current Heart Rate: $_currentHeartRate bpm', style: TextStyle(fontSize: 20)),
-            SizedBox(height: 20),
-            Text('Daily Heart Rate Statistics:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            SizedBox(
-              height: 200,
-              child: LineChart(
-                _mainData(dailySpots),
-              ),
-            ),
-            SizedBox(height: 20),
-            Text('Weekly Heart Rate Statistics:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            SizedBox(
-              height: 200,
-              child: LineChart(
-                _mainData(weeklySpots),
-              ),
-            ),
-            Spacer(),
-            Center(
               child: Text(
-                '근무 중 자주 휴식을 취하세요.',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                'Menu',
+                style: TextStyle(color: Colors.white, fontSize: 24),
               ),
             ),
-            SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/chart');
-                  },
-                  child: Text('Go to Chart'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/myPage');
-                  },
-                  child: Text('My Page'),
-                ),
-              ],
+            ListTile(
+              title: Text('Home'),
+              onTap: () {
+                Navigator.pushNamed(context, '/home');
+              },
+            ),
+            ListTile(
+              title: Text('Login'),
+              onTap: () {
+                Navigator.pushNamed(context, '/login');
+              },
+            ),
+            ListTile(
+              title: Text('119신고'),
+              onTap: () {
+                Navigator.pushNamed(context, '/call119');
+              },
+            ),
+            ListTile(
+              title: Text('My Page'),
+              onTap: () {
+                Navigator.pushNamed(context, '/mypage');
+              },
+            ),
+            ListTile(
+              title: Text('뽀모도로'),
+              onTap: () {
+                Navigator.pushNamed(context, '/time');
+              },
             ),
           ],
+        ),
+      ),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        color: Color(0xFFF7F8FA),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              SizedBox(height: 20),
+              Center(
+                child: Text(
+                  '심장박동수 통계',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 32,
+                    fontFamily: 'Noto Sans HK',
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              SizedBox(height: 20),
+              Text(
+                'Current Heart Rate: $_currentHeartRate bpm',
+                style: TextStyle(
+                  fontSize: 24,
+                  color: currentHeartRate > 150 ? Colors.red : Colors.green,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 10),
+              Text(
+                currentHeartRate > 150 ? '안정을 취하세요' : '심박수가 정상입니다',
+                style: TextStyle(
+                  fontSize: 18,
+                  color: Colors.black,
+                ),
+              ),
+              SizedBox(height: 20),
+              Container(
+                width: 1173,
+                height: 418,
+                margin: EdgeInsets.symmetric(horizontal: 16),
+                decoration: ShapeDecoration(
+                  color: Colors.white,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(5)),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: LineChart(
+                    _mainData(dailySpots),
+                  ),
+                ),
+              ),
+              SizedBox(height: 20),
+              Container(
+                width: 1173,
+                height: 425,
+                margin: EdgeInsets.symmetric(horizontal: 16),
+                decoration: ShapeDecoration(
+                  color: Colors.white,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(5)),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: LineChart(
+                    _mainData(weeklySpots),
+                  ),
+                ),
+              ),
+              SizedBox(height: 20),
+              Text.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(
+                      text: '평균 심박수 : ',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 32,
+                        fontFamily: 'Noto Sans HK',
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                    TextSpan(
+                      text: '48 ',
+                      style: TextStyle(
+                        color: Color(0xFF006ECD),
+                        fontSize: 32,
+                        fontFamily: 'Noto Sans HK',
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                    TextSpan(
+                      text: 'bpm (저심박수)\n',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 32,
+                        fontFamily: 'Noto Sans HK',
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                    TextSpan(
+                      text: '심박수가 다소 낮습니다. 피곤하거나 무기력을 느낀다면, 잠시 휴식을 취하고 심호흡을 해보세요.',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 28,
+                        fontFamily: 'Noto Sans HK',
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 40),
+              Text(
+                '다음 주 근무 중 자주 휴식을 취하시길 바랍니다',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 40),
+            ],
+          ),
         ),
       ),
     );
@@ -175,7 +326,8 @@ class _ChartScreenState extends State<chartScreen> {
   LineChartData _mainData(List<FlSpot> spots) {
     return LineChartData(
       lineTouchData: LineTouchData(
-        getTouchedSpotIndicator: (LineChartBarData barData, List<int> spotIndexes) {
+        getTouchedSpotIndicator:
+            (LineChartBarData barData, List<int> spotIndexes) {
           return spotIndexes.map((spotIndex) {
             final spot = barData.spots[spotIndex];
             return TouchedSpotIndicatorData(
@@ -295,7 +447,10 @@ class _ChartScreenState extends State<chartScreen> {
           belowBarData: BarAreaData(
             show: true,
             gradient: LinearGradient(
-              colors: [Colors.blue.withOpacity(0.3), Colors.blue.withOpacity(0.1)],
+              colors: [
+                Colors.blue.withOpacity(0.3),
+                Colors.blue.withOpacity(0.1)
+              ],
             ),
           ),
         ),
@@ -303,6 +458,16 @@ class _ChartScreenState extends State<chartScreen> {
     );
   }
 }
+
+class HeartRateData {
+  final DateTime time;
+  final int heartRate;
+
+  HeartRateData(this.time, this.heartRate);
+}
+
+
+
 
 
 

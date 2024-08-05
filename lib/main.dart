@@ -1,3 +1,4 @@
+import 'package:cj_webapp/screens/restTimeScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:cj_webapp/screens/homeScreen.dart';
 import 'package:cj_webapp/screens/SignUpScreen.dart';
@@ -23,9 +24,9 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: HomeScreen(title: 'CJ Health'), // 홈 화면을 설정
+      home: loginScreen(), // 홈 화면을 설정
       routes: {
-        '/signup': (context) => SignUpScreen(),
+        '/signup': (context) => SignUpScreen(role: 'admin'),
         '/login': (context) => loginScreen(),
         '/home': (context) => HomeScreen(title: 'CJ Health'), // title 전달
         '/managerMain': (context) => AdminScreen(),

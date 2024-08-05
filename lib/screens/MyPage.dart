@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 
 class MyPage extends StatefulWidget {
+  const MyPage({super.key});
+
   @override
   _MyPageState createState() => _MyPageState();
 }
@@ -30,7 +32,7 @@ class _MyPageState extends State<MyPage> {
       }
     } catch (e) {
       setState(() {
-        _name = 'Error fetching user data';
+        _name = 'User1';
       });
     }
   }
@@ -40,76 +42,41 @@ class _MyPageState extends State<MyPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('My Page'),
+        backgroundColor: Colors.blue,
+        elevation: 0,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Name: $_name', style: TextStyle(fontSize: 20)),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                // Handle profile edit action
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Edit Profile Clicked')));
-              },
-              child: Text('Edit Profile'),
+            Container(
+              color: Colors.blue,
+              width: double.infinity,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    SizedBox(height: 30),
+                    CircleAvatar(
+                      radius: 40,
+                      backgroundColor: Colors.grey.shade300,
+                      child: Icon(Icons.person, size: 40, color: Colors.white),
+                    ),
+                    SizedBox(height: 40),
+                    Text('Name: $_name', style: TextStyle(fontSize: 30, color: Colors.white)),
+                    SizedBox(height: 40),
+                  ],
+                ),
+              ),
             ),
-            ElevatedButton(
-              onPressed: () {
-                // Handle password change action
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Change Password Clicked')));
-              },
-              child: Text('Change Password'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                // Handle push notifications settings
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Push Notifications Clicked')));
-              },
-              child: Text('Push Notifications'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/call119');
-              },
-              child: Text('View Reports'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Notice Clicked')));
-              },
-              child: Text('Notice'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Inquiry Clicked')));
-              },
-              child: Text('1:1 Inquiry'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Customer Service Clicked')));
-              },
-              child: Text('Customer Service'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Settings Clicked')));
-              },
-              child: Text('Settings'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/searchActivity');
-              },
-              child: Text('Chart Pic'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('My Page Clicked')));
-              },
-              child: Text('My Page'),
+            ...List.generate(
+              _menuItems.length,
+                  (index) => ListTile(
+                title: Text(_menuItems[index].title),
+                trailing: Icon(Icons.arrow_forward_ios, size: 16),
+                onTap: _menuItems[index].onTap,
+              ),
             ),
           ],
         ),
@@ -117,3 +84,21 @@ class _MyPageState extends State<MyPage> {
     );
   }
 }
+
+class MenuItem {
+  final String title;
+  final VoidCallback onTap;
+
+  MenuItem(this.title, this.onTap);
+}
+
+List<MenuItem> _menuItems = [
+  MenuItem('프로필 수정', () => print('Edit Profile Clicked')),
+  MenuItem('비밀번호 변경', () => print('Change Password Clicked')),
+  MenuItem('알람 설정', () => print('Push Notifications Clicked')),
+  MenuItem('신고 내역 조회', () => print('View Reports Clicked')),
+  MenuItem('공지사항', () => print('Notice Clicked')),
+  MenuItem('1:1 문의', () => print('1:1 Inquiry Clicked')),
+  MenuItem('고객 서비스', () => print('Customer Service Clicked')),
+  MenuItem('설정', () => print('Settings Clicked')),
+];
