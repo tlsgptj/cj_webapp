@@ -5,6 +5,8 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
+import 'HeartRateData.dart';
+
 class Detailchartscreen extends StatefulWidget {
   @override
   _ChartScreenState createState() => _ChartScreenState();
@@ -218,7 +220,7 @@ class _ChartScreenState extends State<Detailchartscreen> {
               SizedBox(height: 20),
               Center(
                 child: Text(
-                  'Daily Working Hours',
+                  '하루 근무 시간',
                   style: TextStyle(
                     color: Colors.black,
                     fontSize: 24,
@@ -251,7 +253,7 @@ class _ChartScreenState extends State<Detailchartscreen> {
               SizedBox(height: 20),
               Center(
                 child: Text(
-                  'Weekly Stress Index',
+                  '주중 스트레스 지수',
                   style: TextStyle(
                     color: Colors.black,
                     fontSize: 24,
@@ -280,7 +282,7 @@ class _ChartScreenState extends State<Detailchartscreen> {
               SizedBox(height: 20),
               Center(
                 child: Text(
-                  'Emergency Reports',
+                  '신고 접수 현황 목록',
                   style: TextStyle(
                     color: Colors.black,
                     fontSize: 24,
@@ -334,18 +336,18 @@ class _ChartScreenState extends State<Detailchartscreen> {
     return Column(
       children: [
         _reportTile(
-          icon: Icons.warning,
-          title: 'Fire Alarm',
+          icon: Icons.local_hospital,
+          title: '신고 접수',
           date: '2024-08-05',
         ),
         _reportTile(
           icon: Icons.local_hospital,
-          title: 'Medical Emergency',
+          title: '신고 접수',
           date: '2024-08-04',
         ),
         _reportTile(
-          icon: Icons.lock,
-          title: 'Security Alert',
+          icon: Icons.local_hospital,
+          title: '신고 접수',
           date: '2024-08-03',
         ),
       ],
@@ -504,9 +506,3 @@ class _ChartScreenState extends State<Detailchartscreen> {
   }
 }
 
-class HeartRateData {
-  final DateTime time;
-  final double heartRate;
-
-  HeartRateData(this.time, this.heartRate);
-}
