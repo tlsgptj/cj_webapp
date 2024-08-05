@@ -48,7 +48,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     String phone = _phoneController.text.trim();
 
     if (password != confirmPassword) {
-      Fluttertoast.showToast(msg: "Passwords do not match");
+      Fluttertoast.showToast(msg: "비밀번호가 일치하지 않습니다.");
       return;
     }
 
@@ -92,12 +92,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
     try {
       final signInMethods = await _auth.fetchSignInMethodsForEmail(email);
       if (signInMethods.isEmpty) {
-        Fluttertoast.showToast(msg: "Email is available");
+        Fluttertoast.showToast(msg: "이메일 사용 가능합니다");
       } else {
-        Fluttertoast.showToast(msg: "Email is already in use");
+        Fluttertoast.showToast(msg: "이미 사용중인 이메일입니다.");
       }
     } catch (e) {
-      Fluttertoast.showToast(msg: "Email Check Failed: ${e}");
+      Fluttertoast.showToast(msg: "이메일 확인 에러: ${e}");
     }
   }
 
@@ -115,33 +115,33 @@ class _SignUpScreenState extends State<SignUpScreen> {
             children: [
               TextField(
                 controller: _emailController,
-                decoration: InputDecoration(labelText: 'Email'),
+                decoration: InputDecoration(labelText: '이메일'),
               ),
               TextField(
                 controller: _passwordController,
                 obscureText: true,
-                decoration: InputDecoration(labelText: 'Password'),
+                decoration: InputDecoration(labelText: '비밀번호'),
               ),
               TextField(
                 controller: _confirmPasswordController,
                 obscureText: true,
-                decoration: InputDecoration(labelText: 'Confirm Password'),
+                decoration: InputDecoration(labelText: '비밀번호 확인'),
               ),
               TextField(
                 controller: _nameController,
-                decoration: InputDecoration(labelText: 'Name'),
+                decoration: InputDecoration(labelText: '이름'),
               ),
               TextField(
                 controller: _phoneController,
-                decoration: InputDecoration(labelText: 'Phone'),
+                decoration: InputDecoration(labelText: '번호'),
               ),
               Row(
                 children: [
                   Expanded(
                     child: ListTile(
-                      title: Text('Male'),
+                      title: Text('남성'),
                       leading: Radio<String>(
-                        value: 'Male',
+                        value: '남성',
                         groupValue: _selectedGender,
                         onChanged: (value) {
                           setState(() {
@@ -153,9 +153,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                   Expanded(
                     child: ListTile(
-                      title: Text('Female'),
+                      title: Text('여성'),
                       leading: Radio<String>(
-                        value: 'Female',
+                        value: '여성',
                         groupValue: _selectedGender,
                         onChanged: (value) {
                           setState(() {
@@ -169,12 +169,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
               ),
               TextButton(
                 onPressed: _checkEmailDuplicate,
-                child: Text('Check Email Duplicate'),
+                child: Text('이메일 확인'),
               ),
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _pickImage,
-                child: Text('Pick Profile Image'),
+                child: Text('이미지 등록'),
               ),
               if (_imageFile != null)
                 Padding(
@@ -188,7 +188,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _signUp,
-                child: Text('Sign Up'),
+                child: Text('회원가입'),
               ),
             ],
           ),
