@@ -396,7 +396,7 @@ class _ChartScreenState extends State<Detailchartscreen> {
                 ),
                 children: [
                   TextSpan(
-                    text: '${flSpot.y.toInt()} bpm',
+                    text: '${flSpot.y.toInt()}',
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w900,
@@ -412,13 +412,13 @@ class _ChartScreenState extends State<Detailchartscreen> {
       extraLinesData: ExtraLinesData(
         horizontalLines: [
           HorizontalLine(
-            y: 110, // First target line
+            y: 10, // First target line
             color: Colors.red,
             strokeWidth: 2,
             dashArray: [20, 10],
           ),
           HorizontalLine(
-            y: 150, // Second target line
+            y: 8, // Second target line
             color: Colors.orange,
             strokeWidth: 2,
             dashArray: [20, 10],
@@ -469,7 +469,7 @@ class _ChartScreenState extends State<Detailchartscreen> {
             reservedSize: 36,
             interval: 10,
             getTitlesWidget: (value, meta) => Text(
-              '$value bpm',
+              '$value',
               style: TextStyle(fontSize: 10),
             ),
           ),
@@ -481,8 +481,8 @@ class _ChartScreenState extends State<Detailchartscreen> {
       ),
       minX: spots.isEmpty ? 0 : spots.first.x,
       maxX: spots.isEmpty ? 1 : spots.last.x,
-      minY: 60,
-      maxY: 200,
+      minY: 1,
+      maxY: 10,
       lineBarsData: [
         LineChartBarData(
           spots: spots,

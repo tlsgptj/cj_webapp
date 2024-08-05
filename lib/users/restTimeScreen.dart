@@ -84,7 +84,7 @@ class _RestTimeScreenState extends State<RestTimeScreen> {
             ListTile(title: Text('Home'), onTap: () => Navigator.pushNamed(context, '/home')),
             ListTile(title: Text('Login'), onTap: () => Navigator.pushNamed(context, '/login')),
             ListTile(title: Text('차트보기'), onTap: () => Navigator.pushNamed(context, '/chart')),
-            ListTile(title: Text('119신고'), onTap: () => Navigator.pushNamed(context, '/call119')),
+            ListTile(title: Text('119신고'), onTap: () => Navigator.pushNamed(context, '/DetailScreen')),
             ListTile(title: Text('마이페이지'), onTap: () => Navigator.pushNamed(context, '/mypage')),
             ListTile(title: Text('LogOut'), onTap: () => Navigator.pushNamed(context, '/login')),
           ],

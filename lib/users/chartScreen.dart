@@ -189,7 +189,7 @@ class _ChartScreenState extends State<chartScreen> {
             ListTile(
               title: Text('119신고내역'),
               onTap: () {
-                Navigator.pushNamed(context, '/call119');
+                Navigator.pushNamed(context, '/Detail');
               },
             ),
             ListTile(
