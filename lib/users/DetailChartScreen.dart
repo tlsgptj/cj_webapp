@@ -49,7 +49,7 @@ class _ChartScreenState extends State<Detailchartscreen> {
       24,
           (index) => HeartRateData(
         now.subtract(Duration(hours: index)),
-        100 + _random.nextDouble() * 40, // Random value between 100 and 140
+        1 + _random.nextDouble() * 2, // Random value between 100 and 140
       ),
     ).reversed.toList();
 
@@ -57,7 +57,7 @@ class _ChartScreenState extends State<Detailchartscreen> {
       7,
           (index) => HeartRateData(
         now.subtract(Duration(days: index)),
-        100 + _random.nextDouble() * 40, // Random value between 100 and 140
+        1 + _random.nextDouble() * 2, // Random value between 100 and 140
       ),
     ).reversed.toList();
 
