@@ -2,6 +2,7 @@ import 'package:cj_webapp/admin/AdminScreen.dart';
 import 'package:cj_webapp/users/DetailChartScreen.dart';
 import 'package:cj_webapp/users/MyPage.dart';
 import 'package:cj_webapp/users/SignUpScreen.dart';
+import 'package:cj_webapp/users/SigninScreen.dart';
 import 'package:cj_webapp/users/UserDetailScreen.dart';
 import 'package:cj_webapp/users/chartScreen.dart';
 import 'package:cj_webapp/users/homeScreen.dart';
@@ -49,7 +50,8 @@ class MyApp extends StatelessWidget {
         '/Detail': (context) => UserDetailScreen(userId: null),
         '/mypage': (context) => MyPage(),
         '/rest': (context) => RestTimeScreen(),
-        '/DetailScreen': (context) => Detailchartscreen()
+        '/DetailScreen': (context) => Detailchartscreen(),
+        '/fingerprint': (context) => SigninScreen()
       },
     );
   }
