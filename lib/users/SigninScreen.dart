@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:local_auth/local_auth.dart';
 
 class SigninScreen extends StatefulWidget {
@@ -9,8 +10,36 @@ class SigninScreen extends StatefulWidget {
 }
 
 class _SigninScreenState extends State<SigninScreen> {
-  // LocalAuthentication 인스턴스
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
   final LocalAuthentication localAuth = LocalAuthentication();
+
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+
+  final _formKey = GlobalKey<FormState>();
+
+  // 사용자 인증 메서드
+  Future<void> _authenticateUser() async {
+    if (_formKey.currentState!.validate()) {
+      try {
+        // 이메일과 비밀번호로 사용자 인증
+        UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+          email: emailController.text.trim(),
+          password: passwordController.text.trim(),
+        );
+
+        // 인증 성공 시 지문 등록 다이얼로그 표시
+        _showFingerprintDialog();
+      } catch (e) {
+        // 인증 실패 시 오류 메시지 표시
+        print('인증 실패: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('인증 실패: ${e.toString()}')),
+        );
+      }
+    }
+  }
 
   // 지문을 등록하는 메서드
   Future<void> _registerFingerprint() async {
@@ -25,7 +54,7 @@ class _SigninScreenState extends State<SigninScreen> {
       );
 
       if (didAuthenticate) {
-        // 지문 등록이 성공하면 메시지를 표시하고 로그인 화면으로 이동
+        // 지문 등록이 성공하면 메시지를 표시하고 홈 화면으로 이동
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('지문 등록 성공')),
         );
@@ -73,11 +102,61 @@ class _SigninScreenState extends State<SigninScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('지문 로그인'),
+        backgroundColor: Colors.blue[900], // 앱바 배경색 설정
       ),
-      body: Center(
-        child: ElevatedButton(
-          onPressed: _showFingerprintDialog,
-          child: const Text('지문으로 로그인'),
+      body: Container(
+        color: Colors.blue[50], // 전체 배경색 설정
+        padding: const EdgeInsets.all(16.0),
+        child: Center(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                TextFormField(
+                  controller: emailController,
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                    border: OutlineInputBorder(),
+                    fillColor: Colors.white,
+                    filled: true,
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return '이메일을 입력하세요';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16.0),
+                TextFormField(
+                  controller: passwordController,
+                  decoration: const InputDecoration(
+                    labelText: 'Password',
+                    border: OutlineInputBorder(),
+                    fillColor: Colors.white,
+                    filled: true,
+                  ),
+                  obscureText: true,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return '비밀번호를 입력하세요';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16.0),
+                ElevatedButton(
+                  onPressed: _authenticateUser,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue[900], // 버튼 배경색 설정
+                    minimumSize: const Size(double.infinity, 48), // 버튼 크기 설정
+                  ),
+                  child: const Text('로그인 후 지문 등록'),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
