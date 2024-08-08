@@ -22,7 +22,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _confirmPasswordController = TextEditingController();
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
-  String _selectedGender = 'Male';
+  String _selectedGender = '남성';
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -68,21 +68,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
       }
 
       // Store user data in Firestore
-      await _firestore.collection('users').doc(userCredential.user!.uid).set({
+      String collection = widget.role == 'admin' ? 'admins' : 'users';
+      await _firestore.collection(collection).doc(userCredential.user!.uid).set({
         'email': email,
         'name': name,
         'phone': phone,
         'gender': _selectedGender,
-        'role': widget.role,//admin이랑 users생성
+        'role': widget.role,
         'profileImageUrl': imageUrl,
       });
 
-      Fluttertoast.showToast(msg: "Sign Up Successful");
+      Fluttertoast.showToast(msg: "회원가입 성공");
 
       // Navigate to home or main screen
       Navigator.pushReplacementNamed(context, '/home');
     } catch (e) {
-      Fluttertoast.showToast(msg: "Sign Up Failed: ${e}");
+      Fluttertoast.showToast(msg: "회원가입 실패: ${e}");
     }
   }
 
@@ -105,76 +106,122 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('${widget.role == 'admin' ? '관리자' : '일반'} 회원 가입'),
+        title: Text(
+          '${widget.role == 'admin' ? '관리자' : '일반'} 회원 가입',
+          style: const TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.blue[700],
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              TextField(
-                controller: _emailController,
-                decoration: InputDecoration(labelText: '이메일'),
+              const Text(
+                '회원 가입',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+                textAlign: TextAlign.center,
               ),
-              TextField(
-                controller: _passwordController,
-                obscureText: true,
-                decoration: InputDecoration(labelText: '비밀번호'),
+              const SizedBox(height: 20),
+              _buildTextField(
+                _emailController,
+                '이메일',
+                false,
+                icon: Icons.email,
               ),
-              TextField(
-                controller: _confirmPasswordController,
-                obscureText: true,
-                decoration: InputDecoration(labelText: '비밀번호 확인'),
+              const SizedBox(height: 10),
+              _buildTextField(
+                _passwordController,
+                '비밀번호',
+                true,
+                icon: Icons.lock,
               ),
-              TextField(
-                controller: _nameController,
-                decoration: InputDecoration(labelText: '이름'),
+              const SizedBox(height: 10),
+              _buildTextField(
+                _confirmPasswordController,
+                '비밀번호 확인',
+                true,
+                icon: Icons.lock_outline,
               ),
-              TextField(
-                controller: _phoneController,
-                decoration: InputDecoration(labelText: '번호'),
+              const SizedBox(height: 10),
+              _buildTextField(
+                _nameController,
+                '이름',
+                false,
+                icon: Icons.person,
               ),
+              const SizedBox(height: 10),
+              _buildTextField(
+                _phoneController,
+                '번호',
+                false,
+                icon: Icons.phone,
+              ),
+              const SizedBox(height: 10),
               Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Expanded(
-                    child: ListTile(
-                      title: Text('남성'),
-                      leading: Radio<String>(
-                        value: '남성',
-                        groupValue: _selectedGender,
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedGender = value!;
-                          });
-                        },
-                      ),
+                    child: RadioListTile<String>(
+                      title: const Text('남성'),
+                      value: '남성',
+                      groupValue: _selectedGender,
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedGender = value!;
+                        });
+                      },
                     ),
                   ),
                   Expanded(
-                    child: ListTile(
-                      title: Text('여성'),
-                      leading: Radio<String>(
-                        value: '여성',
-                        groupValue: _selectedGender,
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedGender = value!;
-                          });
-                        },
-                      ),
+                    child: RadioListTile<String>(
+                      title: const Text('여성'),
+                      value: '여성',
+                      groupValue: _selectedGender,
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedGender = value!;
+                        });
+                      },
                     ),
                   ),
                 ],
               ),
-              TextButton(
+              const SizedBox(height: 10),
+              ElevatedButton(
                 onPressed: _checkEmailDuplicate,
-                child: Text('이메일 확인'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  minimumSize: const Size(double.infinity, 48),
+                ),
+                child: const Text(
+                  '이메일 확인',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _pickImage,
-                child: Text('이미지 등록'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.amberAccent,
+                  minimumSize: const Size(double.infinity, 48),
+                ),
+                child: const Text(
+                  '이미지 등록',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
               if (_imageFile != null)
                 Padding(
@@ -185,10 +232,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     width: 100,
                   ),
                 ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _signUp,
-                child: Text('회원가입'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue[200],
+                  minimumSize: const Size(double.infinity, 48),
+                ),
+                child: const Text(
+                  '회원가입',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ],
           ),
@@ -196,6 +253,24 @@ class _SignUpScreenState extends State<SignUpScreen> {
       ),
     );
   }
+
+  Widget _buildTextField(
+      TextEditingController controller, String labelText, bool obscureText,
+      {IconData? icon}) {
+    return TextField(
+      controller: controller,
+      obscureText: obscureText,
+      decoration: InputDecoration(
+        labelText: labelText,
+        prefixIcon: icon != null ? Icon(icon) : null,
+        border: const OutlineInputBorder(),
+        filled: true,
+        fillColor: Colors.white,
+      ),
+    );
+  }
 }
+
+
 
 

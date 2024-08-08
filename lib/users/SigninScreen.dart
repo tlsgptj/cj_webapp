@@ -101,8 +101,8 @@ class _SigninScreenState extends State<SigninScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('지문 로그인'),
-        backgroundColor: Colors.blue[900], // 앱바 배경색 설정
+        title: const Text('지문 로그인', style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.blue[800], // 앱바 배경색 설정
       ),
       body: Container(
         color: Colors.blue[50], // 전체 배경색 설정
@@ -149,10 +149,10 @@ class _SigninScreenState extends State<SigninScreen> {
                 ElevatedButton(
                   onPressed: _authenticateUser,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue[900], // 버튼 배경색 설정
+                    backgroundColor: Colors.blue[800], // 버튼 배경색 설정
                     minimumSize: const Size(double.infinity, 48), // 버튼 크기 설정
                   ),
-                  child: const Text('로그인 후 지문 등록'),
+                  child: const Text('로그인 후 지문 등록', style: TextStyle(color: Colors.white)),
                 ),
               ],
             ),
