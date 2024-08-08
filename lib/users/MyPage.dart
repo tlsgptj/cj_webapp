@@ -1,29 +1,32 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_database/firebase_database.dart';
 
 class MyPage extends StatefulWidget {
-  const MyPage({super.key});
+  final String userId;
+
+  const MyPage({super.key, required this.userId});
 
   @override
   _MyPageState createState() => _MyPageState();
 }
 
 class _MyPageState extends State<MyPage> {
-  final DatabaseReference _userRef = FirebaseDatabase.instance.ref().child('users/user1');
+  late DocumentReference _userRef;
   String _name = 'Loading...';
 
   @override
   void initState() {
     super.initState();
+    _userRef = FirebaseFirestore.instance.collection('users').doc(widget.userId);
     _fetchUserInfo();
   }
 
   void _fetchUserInfo() async {
     try {
-      final snapshot = await _userRef.get();
-      if (snapshot.exists) {
+      final doc = await _userRef.get();
+      if (doc.exists) {
         setState(() {
-          _name = snapshot.child('name').value.toString();
+          _name = doc['name'];
         });
       } else {
         setState(() {
@@ -32,7 +35,7 @@ class _MyPageState extends State<MyPage> {
       }
     } catch (e) {
       setState(() {
-        _name = 'User1';
+        _name = 'Error fetching user data';
       });
     }
   }
@@ -70,14 +73,11 @@ class _MyPageState extends State<MyPage> {
                 ),
               ),
             ),
-            ...List.generate(
-              _menuItems.length,
-                  (index) => ListTile(
-                title: Text(_menuItems[index].title),
-                trailing: Icon(Icons.arrow_forward_ios, size: 16),
-                onTap: _menuItems[index].onTap,
-              ),
-            ),
+            ..._menuItems.map((item) => ListTile(
+              title: Text(item.title),
+              trailing: Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: item.onTap,
+            )),
           ],
         ),
       ),
