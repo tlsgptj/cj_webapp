@@ -44,6 +44,8 @@ dependencies:
   flutter_svg: ^2.0.9
   cloud_firestore: ^4.17.5
   provider: ^6.1.2
+  excel: ^2.0.8
+  http: ^0.13.5
 
 
 

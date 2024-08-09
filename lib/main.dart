@@ -7,6 +7,7 @@ import 'package:cj_webapp/users/chartScreen.dart';
 import 'package:cj_webapp/users/homeScreen.dart';
 import 'package:cj_webapp/users/loginScreen.dart';
 import 'package:cj_webapp/users/restTimeScreen.dart';
+import 'package:cj_webapp/users/searchUsers.dart';
 import 'package:cj_webapp/users/userProvider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -55,6 +56,7 @@ class MyApp extends StatelessWidget {
             '/rest': (context) => RestTimeScreen(),
             '/DetailScreen': (context) => Detailchartscreen(),
             '/fingerprint': (context) => SigninScreen(),
+            '/searchUsers': (context) => SearchUsers()
           },
         );
       },

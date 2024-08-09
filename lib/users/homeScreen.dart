@@ -138,6 +138,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ListTile(title: Text('마이페이지'), onTap: () => Navigator.pushNamed(context, '/mypage'), leading: Icon(Icons.person)),
           ListTile(title: Text('로그아웃'), onTap: () => Navigator.pushNamed(context, '/login'), leading: Icon(Icons.logout)),
           ListTile(title: Text('뽀모도로'), onTap: () => Navigator.pushNamed(context, '/rest'), leading: Icon(Icons.timer)),
+          ListTile(title: Text('STAFF LIST'), onTap: () => Navigator.pushNamed(context, '/searchUsers'), leading: Icon(Icons.person))
         ],
       ),
     );
